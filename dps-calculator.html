@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - ডিপিএস ক্যালকুলেটর</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f8fafc; }
+        .result-card { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+
+    <div class="max-w-2xl mx-auto">
+        <!-- হেডার সেকশন -->
+        <div class="bg-indigo-900 p-8 rounded-[2.5rem] text-white text-center shadow-xl mb-8 border-b-8 border-amber-400">
+            <h1 class="text-3xl font-black italic tracking-tighter uppercase">ডিপিএস ক্যালকুলেটর</h1>
+            <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-[0.3em] mt-2">ভবিষ্যতের সঞ্চয় আজই পরিকল্পনা করুন</p>
+        </div>
+
+        <!-- ইনপুট সেকশন -->
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-2 mb-2 block">মাসিক কিস্তির পরিমাণ (৳)</label>
+                    <input type="number" id="monthlyInstallment" oninput="calculateDPS()" placeholder="৫০০" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl outline-indigo-500 font-black text-xl text-indigo-600">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-2 mb-2 block">বার্ষিক মুনাফার হার (%)</label>
+                    <input type="number" id="annualRate" oninput="calculateDPS()" value="১০" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl outline-indigo-500 font-black text-xl">
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <p class="text-center text-[11px] font-bold text-slate-400 uppercase tracking-widest">সময়কাল: ১০ বছর (১২০ মাস)</p>
+            </div>
+        </div>
+
+        <!-- রেজাল্ট কার্ড -->
+        <div class="result-card p-8 rounded-[3rem] text-white shadow-2xl relative overflow-hidden mb-8">
+            <div class="relative z-10">
+                <p class="text-xs font-bold uppercase text-indigo-300 tracking-widest mb-1 text-center md:text-left">১০ বছর পর মোট পাবেন (Maturity)</p>
+                <h2 id="maturityAmount" class="text-5xl md:text-6xl font-black text-white tracking-tighter text-center md:text-left">৳ ০</h2>
+                
+                <div class="grid grid-cols-2 gap-4 mt-8 pt-6 border-t border-white/10">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase text-indigo-300">আপনার মোট জমা</p>
+                        <h4 id="totalInvested" class="text-lg font-black text-white">৳ ০</h4>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold uppercase text-emerald-400">মোট লাভ (Profit)</p>
+                        <h4 id="totalProfit" class="text-lg font-black text-emerald-400">৳ ০</h4>
+                    </div>
+                </div>
+            </div>
+            <!-- ডেকোরেশন -->
+            <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full"></div>
+        </div>
+
+        <!-- তথ্যমূলক চার্ট -->
+        <div class="bg-amber-50 p-6 rounded-[2rem] border border-amber-100">
+            <h4 class="text-xs font-black text-amber-800 uppercase mb-3 flex items-center gap-2">
+                <span class="p-1 bg-amber-200 rounded-lg">💡</span> ডিপিএস টিপস:
+            </h4>
+            <ul class="text-[11px] text-amber-700 space-y-2 font-medium">
+                <li>• ১০ বছরের দীর্ঘমেয়াদী ডিপিএস-এ কম্পাউন্ড ইন্টারেস্টের কারণে মুনাফা অনেক বেশি হয়।</li>
+                <li>• বার্ষিক ১০% থেকে ১২% মুনাফা ধরলে আপনার আসল টাকা ১০ বছর পর প্রায় দ্বিগুণ হতে পারে।</li>
+                <li>• প্রতি মাসের ১ থেকে ১০ তারিখের মধ্যে কিস্তি জমা দেওয়া সবচেয়ে নিরাপদ।</li>
+            </ul>
+        </div>
+        
+        <div class="mt-10 text-center">
+            <button onclick="window.print()" class="text-[10px] font-black text-slate-400 uppercase border-b border-slate-200 pb-1">রিপোর্ট প্রিন্ট করুন</button>
+        </div>
+    </div>
+
+    <script>
+        function calculateDPS() {
+            // ১. ইনপুট ডাটা নেওয়া
+            const installment = parseFloat(document.getElementById('monthlyInstallment').value) || 0;
+            const annualRate = parseFloat(document.getElementById('annualRate').value) || 0;
+            const years = 10; // ফিক্সড ১০ বছর
+            const months = years * 12; // ১২০ মাস
+
+            if (installment <= 0) {
+                resetResults();
+                return;
+            }
+
+            // ২. ডিপিএস ম্যাথমেটিক্যাল ফর্মুলা (Compound Interest)
+            // M = P * [((1+i)^n - 1) / i] * (1+i)
+            // যেখানে P = কিস্তি, i = মাসিক মুনাফার হার, n = মোট মাস
+            const monthlyRate = (annualRate / 100) / 12;
+            
+            let maturityAmount = 0;
+            if (monthlyRate > 0) {
+                maturityAmount = installment * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+            } else {
+                maturityAmount = installment * months;
+            }
+
+            const totalInvested = installment * months;
+            const totalProfit = maturityAmount - totalInvested;
+
+            // ৩. UI আপডেট করা
+            document.getElementById('maturityAmount').innerText = "৳ " + Math.round(maturityAmount).toLocaleString('bn-BD');
+            document.getElementById('totalInvested').innerText = "৳ " + totalInvested.toLocaleString('bn-BD');
+            document.getElementById('totalProfit').innerText = "৳ " + Math.round(totalProfit).toLocaleString('bn-BD');
+        }
+
+        function resetResults() {
+            document.getElementById('maturityAmount').innerText = "৳ ০";
+            document.getElementById('totalInvested').innerText = "৳ ০";
+            document.getElementById('totalProfit').innerText = "৳ ০";
+        }
+    </script>
+</body>
+</html>

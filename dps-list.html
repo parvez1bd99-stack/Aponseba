@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - ডিপিএস তালিকা</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f1f5f9; }
+        .dps-card { border-left: 6px solid #4f46e5; transition: all 0.3s ease; }
+        .progress-bar { background: #e2e8f0; height: 8px; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #4f46e5; transition: width 1s ease; }
+        .member-item:active { transform: scale(0.98); }
+    </style>
+</head>
+<body class="pb-20">
+
+    <header class="bg-indigo-900 text-white p-5 sticky top-0 z-50 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-black italic tracking-tighter uppercase">ডিপিএস ডিরেক্টরি</h1>
+                <p id="scopeText" class="text-[10px] uppercase font-bold text-indigo-300 mt-0.5 tracking-widest">ডাটা লোড হচ্ছে...</p>
+            </div>
+            <button onclick="history.back()" class="bg-indigo-800 p-2 rounded-xl border border-indigo-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8 max-w-6xl">
+        
+        <!-- সার্চ ও সামারি -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-8">
+            <div class="md:col-span-8 bg-white p-4 rounded-3xl shadow-sm border border-indigo-50">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-4 flex items-center text-gray-400">🔍</span>
+                    <input type="text" id="searchInput" onkeyup="filterDps()" placeholder="সদস্যের নাম বা মোবাইল দিয়ে খুঁজুন..." 
+                        class="w-full bg-slate-50 border-2 border-slate-50 p-3.5 pl-12 rounded-2xl outline-indigo-600 text-sm font-bold transition focus:bg-white">
+                </div>
+            </div>
+            <div class="md:col-span-4 bg-indigo-600 p-4 rounded-3xl shadow-lg text-white flex justify-between items-center px-6">
+                <div>
+                    <p class="text-[9px] font-bold uppercase opacity-70">শাখার মোট ডিপিএস জমা</p>
+                    <h3 id="totalBranchDps" class="text-xl font-black tracking-tighter">৳ ০</h3>
+                </div>
+                <span class="text-2xl">🏦</span>
+            </div>
+        </div>
+
+        <!-- ডিপিএস কার্ড গ্রিড -->
+        <div id="dpsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-20">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                <p class="text-gray-400 text-[10px] font-bold uppercase">ডিপিএস ডাটাবেস রিড করা হচ্ছে...</p>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { db, checkAccess } from './firebase-config.js';
+        import { collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        checkAccess(); 
+
+        const branchId = localStorage.getItem('branchId');
+        const userUid = localStorage.getItem('userUid');
+        const userRole = localStorage.getItem('userRole');
+
+        async function loadDpsList() {
+            const grid = document.getElementById('dpsGrid');
+            const scopeText = document.getElementById('scopeText');
+            
+            try {
+                // ১. ডিপিএস কুয়েরি (ইনডেক্স ঝামেলা এড়াতে রোল ও ব্রাঞ্চ দিয়ে সহজ কুয়েরি)
+                let dpsQ = query(collection(db, "dps_accounts"), where("branchId", "==", branchId), where("status", "==", "Active"));
+                
+                const snap = await getDocs(dpsQ);
+                grid.innerHTML = "";
+                let branchTotal = 0;
+
+                // ডাটাবেসে ডিপিএস আছে কি না চেক করা
+                if(snap.empty) {
+                    grid.innerHTML = '<div class="col-span-full text-center p-20 bg-white rounded-[3rem] border-dashed border-2 text-gray-400 font-bold uppercase">কোনো সক্রিয় ডিপিএস একাউন্ট পাওয়া যায়নি</div>';
+                    document.getElementById('totalBranchDps').innerText = "৳ ০";
+                    scopeText.innerText = "ডিরেক্টরি খালি";
+                    return;
+                }
+
+                // ২. রোল অনুযায়ী ফিল্টার করা এবং কার্ড তৈরি
+                let filteredCount = 0;
+                for(const d of snap.docs) {
+                    const dps = d.data();
+                    
+                    // অফিসার হলে শুধু নিজের মেম্বার দেখবে, ম্যানেজার হলে সব
+                    if(userRole === 'officer' && dps.officerId !== userUid) continue;
+
+                    const uSnap = await getDoc(doc(db, "users", dps.customerId));
+                    if(uSnap.exists()) {
+                        const user = uSnap.data();
+                        branchTotal += Number(dps.totalDeposited || 0);
+                        filteredCount++;
+
+                        // প্রগ্রেস ক্যালকুলেশন (যেমন: ৫ বছর = ৬০ মাস)
+                        const totalMonths = dps.durationYears * 12;
+                        const progress = Math.min(Math.round((dps.paidInstallments / totalMonths) * 100), 100);
+
+                        grid.innerHTML += `
+                            <div class="dps-card bg-white p-6 rounded-[2.5rem] shadow-sm flex flex-col justify-between dps-item animate-fade-in" 
+                                 data-search="${user.name} ${user.phone}">
+                                
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="font-black text-slate-800 text-lg leading-none">${user.name}</h3>
+                                        <p class="text-[10px] text-gray-400 font-bold mt-1 uppercase italic">মোবাইল: ${user.phone}</p>
+                                    </div>
+                                    <span class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[9px] font-black uppercase shadow-sm">${dps.scheme}</span>
+                                </div>
+
+                                <div class="bg-slate-50 p-5 rounded-3xl border border-indigo-50 mb-5 shadow-inner">
+                                    <div class="flex justify-between items-end mb-4">
+                                        <div>
+                                            <p class="text-[9px] text-gray-400 font-black uppercase mb-1">মোট জমা হয়েছে</p>
+                                            <p class="text-3xl font-black text-indigo-700 tracking-tighter">৳ ${dps.totalDeposited.toLocaleString('bn-BD')}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-[9px] text-gray-400 font-black uppercase">কিস্তি</p>
+                                            <p class="text-lg font-black text-slate-700 tracking-tighter">৳${dps.installmentAmount}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="progress-bar"><div class="progress-fill" style="width: ${progress}%"></div></div>
+                                    <div class="flex justify-between mt-2 text-[9px] font-black uppercase text-gray-400">
+                                        <span>জমা: ${dps.paidInstallments} মাস</span>
+                                        <span class="text-indigo-600">মেয়াদ: ${dps.durationYears} বছর</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <!-- ফিক্সড বাটন: dpsId সরাসরি পাঠানো হচ্ছে -->
+                                    <button onclick="location.href='dps-payment.html?dpsId=${d.id}'" class="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-black text-[11px] uppercase shadow-lg shadow-indigo-100 active:scale-95 transition">ডিপিএস জমা দিন</button>
+                                    <button onclick="location.href='scan-view.html?id=${dps.customerId}'" class="bg-slate-100 p-4 rounded-2xl text-slate-600 border border-slate-200 shadow-sm active:scale-95 transition">📜</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                document.getElementById('totalBranchDps').innerText = "৳ " + branchTotal.toLocaleString('bn-BD');
+                scopeText.innerText = (userRole === 'officer' ? "আপনার ডিপিএস সদস্য: " : "শাখার মোট ডিপিএস: ") + filteredCount + " টি";
+
+            } catch (err) { 
+                console.error(err);
+                grid.innerHTML = `<p class="col-span-full text-center text-red-500 font-bold p-10 uppercase">ডাটা লোড ব্যর্থ: ${err.message}</p>`;
+            }
+        }
+
+        window.filterDps = () => {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('.dps-item').forEach(item => {
+                const text = item.dataset.search.toLowerCase();
+                item.style.display = text.includes(input) ? "" : "none";
+            });
+        };
+
+        loadDpsList();
+    </script>
+</body>
+</html>

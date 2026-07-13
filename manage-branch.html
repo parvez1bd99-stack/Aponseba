@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - শাখা ব্যবস্থাপনা</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Hind Siliguri', sans-serif; background-color: #f3f4f6; }</style>
+</head>
+<body class="pb-10">
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white p-5 sticky top-0 z-50 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-black italic text-emerald-400 uppercase">আপন <span class="text-white not-italic text-xs font-normal">| শাখা নিয়ন্ত্রণ</span></h1>
+            <a href="owner-dashboard.html" class="text-xs bg-slate-800 px-4 py-2 rounded-lg font-bold border border-slate-700">ফিরে যান</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- শাখা তৈরির ফরম -->
+            <div class="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100">
+                <h2 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
+                    <span class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">🏢</span>
+                    নতুন শাখা যোগ করুন
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">শাখার নাম</label>
+                        <input type="text" id="branchName" class="w-full border-2 border-gray-50 p-3 rounded-2xl outline-emerald-500 bg-gray-50 focus:bg-white transition" placeholder="উদা: মিরপুর শাখা">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">শাখার ঠিকানা/অবস্থান</label>
+                        <input type="text" id="branchLocation" class="w-full border-2 border-gray-50 p-3 rounded-2xl outline-emerald-500 bg-gray-50 focus:bg-white transition" placeholder="উদা: ঢাকা, বাংলাদেশ">
+                    </div>
+                    <button onclick="createBranch()" id="branchBtn" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-emerald-700 transition active:scale-95 uppercase text-sm tracking-widest">শাখা নিশ্চিত করুন</button>
+                </div>
+            </div>
+
+            <!-- ম্যানেজার নিয়োগ ফরম -->
+            <div class="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100">
+                <h2 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
+                    <span class="p-2 bg-indigo-100 text-indigo-600 rounded-lg">👤</span>
+                    ম্যানেজার নিয়োগ দিন
+                </h2>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">ম্যানেজারের নাম</label>
+                            <input type="text" id="mgrName" class="w-full border-2 border-gray-50 p-3 rounded-2xl outline-indigo-500 bg-gray-50 text-sm">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">শাখা নির্বাচন</label>
+                            <select id="branchSelect" class="w-full border-2 border-gray-50 p-3 rounded-2xl outline-indigo-500 bg-gray-50 text-sm font-bold">
+                                <option value="">শাখা লোড হচ্ছে...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">লগইন ইমেল</label>
+                        <input type="email" id="mgrEmail" class="w-full border-2 border-gray-100 p-3 rounded-2xl outline-indigo-500 text-sm" placeholder="manager@mail.com">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">পাসওয়ার্ড</label>
+                        <input type="password" id="mgrPass" class="w-full border-2 border-gray-100 p-3 rounded-2xl outline-indigo-500 text-sm" placeholder="******">
+                    </div>
+                    <button onclick="createManager()" id="mgrBtn" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition active:scale-95 uppercase text-sm tracking-widest">ম্যানেজার নিয়োগ নিশ্চিত করুন</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- বিদ্যমান শাখার তালিকা -->
+        <div class="mt-12 bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="p-6 bg-slate-50 border-b flex justify-between items-center">
+                <h3 class="font-black text-slate-800 uppercase tracking-tight">শাখা সমূহের তালিকা</h3>
+                <span id="branchCount" class="bg-slate-200 text-slate-700 px-3 py-1 rounded-full text-[10px] font-bold">০ টি শাখা</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-[10px] font-bold uppercase text-slate-400 border-b">
+                            <th class="p-6">শাখা আইডি</th>
+                            <th class="p-6">শাখার নাম</th>
+                            <th class="p-6">অবস্থান</th>
+                        </tr>
+                    </thead>
+                    <tbody id="branchListBody" class="text-sm divide-y divide-gray-50">
+                        <!-- ডাটা আসবে -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { db, auth, checkAccess, handleLogout } from './firebase-config.js';
+        import { collection, addDoc, getDocs, doc, setDoc, serverTimestamp, orderBy, query } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+        checkAccess('owner');
+        window.logout = handleLogout;
+
+        // ১. শাখা তৈরি
+        window.createBranch = async () => {
+            const name = document.getElementById('branchName').value;
+            const loc = document.getElementById('branchLocation').value;
+            const btn = document.getElementById('branchBtn');
+
+            if(!name || !loc) return alert("সব তথ্য দিন!");
+
+            btn.disabled = true;
+            btn.innerText = "প্রসেসিং...";
+
+            try {
+                await addDoc(collection(db, "branches"), {
+                    branchName: name,
+                    location: loc,
+                    createdAt: serverTimestamp()
+                });
+                alert("শাখা তৈরি সফল হয়েছে!");
+                location.reload();
+            } catch (e) { alert(e.message); btn.disabled = false; }
+        };
+
+        // ২. শাখা তালিকা লোড
+        async function loadBranches() {
+            const q = query(collection(db, "branches"), orderBy("createdAt", "desc"));
+            const snap = await getDocs(q);
+            const select = document.getElementById('branchSelect');
+            const tbody = document.getElementById('branchListBody');
+            
+            select.innerHTML = '<option value="">শাখা নির্বাচন করুন</option>';
+            tbody.innerHTML = "";
+            document.getElementById('branchCount').innerText = snap.size + " টি শাখা";
+
+            snap.forEach(d => {
+                const data = d.data();
+                select.innerHTML += `<option value="${d.id}">${data.branchName}</option>`;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-6 font-mono text-[10px] text-gray-400">${d.id}</td>
+                        <td class="p-6 font-bold text-slate-800">${data.branchName}</td>
+                        <td class="p-6 text-gray-500 italic text-xs">${data.location}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ৩. ম্যানেজার নিয়োগ
+        window.createManager = async () => {
+            const name = document.getElementById('mgrName').value;
+            const email = document.getElementById('mgrEmail').value;
+            const pass = document.getElementById('mgrPass').value;
+            const bId = document.getElementById('branchSelect').value;
+            const btn = document.getElementById('mgrBtn');
+
+            if(!name || !email || !pass || !bId) return alert("সব তথ্য দিন!");
+
+            btn.innerText = "প্রসেসিং...";
+            btn.disabled = true;
+
+            try {
+                // নতুন ইউজার তৈরি
+                const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+                await setDoc(doc(db, "users", userCred.user.uid), {
+                    name: name,
+                    email: email,
+                    role: "manager",
+                    branchId: bId,
+                    createdAt: serverTimestamp(),
+                    createdBy: "Owner"
+                });
+
+                alert("ম্যানেজার নিয়োগ সফল! নিরাপত্তার জন্য আপনাকে পুনরায় লগইন করতে হবে।");
+                await signOut(auth);
+                localStorage.clear();
+                window.location.href = 'index.html';
+
+            } catch (e) { 
+                alert("ত্রুটি: " + e.message); 
+                btn.innerText = "ম্যানেজার নিয়োগ নিশ্চিত করুন";
+                btn.disabled = false;
+            }
+        };
+
+        loadBranches();
+    </script>
+</body>
+</html>

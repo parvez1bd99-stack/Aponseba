@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - সদস্য তালিকা</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f3f7f9; }
+        .member-card { transition: all 0.2s ease; border: 1px solid #e2e8f0; }
+        .member-card:hover { transform: translateY(-3px); border-color: #0d9488; }
+        .info-label { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
+        .info-value { font-size: 13px; font-weight: 700; color: #334155; }
+    </style>
+</head>
+<body class="pb-20">
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white p-5 sticky top-0 z-50 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-black italic tracking-tighter uppercase">সদস্য তালিকা</h1>
+                <!-- এখানে সংখ্যা এবং রোল দেখাবে ভেরিফিকেশনের জন্য -->
+                <p id="countDisplay" class="text-[10px] text-teal-400 font-bold uppercase tracking-widest mt-0.5">ডাটা চেক হচ্ছে...</p>
+            </div>
+            <button onclick="history.back()" class="bg-slate-800 p-2 rounded-xl border border-slate-700 active:scale-95 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8 max-w-6xl">
+        
+        <!-- স্মার্ট সার্চ বক্স -->
+        <div class="bg-white p-4 rounded-3xl shadow-sm mb-8 border border-gray-100 sticky top-24 z-40">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-4 flex items-center text-gray-400">🔍</span>
+                <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="সদস্য, স্বামী/স্ত্রী বা মোবাইল দিয়ে খুঁজুন..." 
+                    class="w-full bg-slate-50 border-2 border-slate-50 p-4 pl-12 rounded-2xl outline-teal-600 text-sm font-bold transition focus:bg-white">
+            </div>
+        </div>
+
+        <!-- মেম্বার কার্ড গ্রিড -->
+        <div id="memberGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-20">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>
+                <p class="text-gray-400 text-xs font-bold uppercase mt-4">ডাটাবেস থেকে তথ্য আনা হচ্ছে...</p>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { db, checkAccess } from './firebase-config.js';
+        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        checkAccess(); 
+
+        async function loadMembers() {
+            // ১. লোকাল স্টোরেজ থেকে একদম লেটেস্ট ডাটা নেওয়া
+            const branchId = localStorage.getItem('branchId');
+            const userUid = localStorage.getItem('userUid');
+            const userRole = localStorage.getItem('userRole');
+            
+            const grid = document.getElementById('memberGrid');
+            const countDisplay = document.getElementById('countDisplay');
+            
+            try {
+                let userQ;
+
+                // ২. কুয়েরি লজিক (অফিসার বনাম ম্যানেজার)
+                if(userRole === 'officer') {
+                    // অফিসার শুধু তার নিজের মেম্বার দেখবে
+                    userQ = query(
+                        collection(db, "users"), 
+                        where("officerId", "==", userUid), 
+                        where("role", "==", "customer")
+                    );
+                } else {
+                    // ম্যানেজার বা অন্য কেউ পুরা শাখার মেম্বার দেখবে
+                    userQ = query(
+                        collection(db, "users"), 
+                        where("branchId", "==", branchId), 
+                        where("role", "==", "customer")
+                    );
+                }
+
+                const snap = await getDocs(userQ);
+                grid.innerHTML = "";
+
+                // ৩. কাউন্টার আপডেট (এখানেই পরিবর্তন করা হয়েছে)
+                const totalCount = snap.size;
+                const label = userRole === 'officer' ? "আপনার মেম্বার: " : "শাখার মোট সদস্য: ";
+                countDisplay.innerText = `${label} ${totalCount} জন`;
+
+                if(snap.empty) {
+                    grid.innerHTML = '<div class="col-span-full text-center p-20 bg-white rounded-[3rem] border-dashed border-2 text-gray-400 font-bold uppercase">শালায় কোনো কাস্টমার পাওয়া যায়নি</div>';
+                    return;
+                }
+
+                // ৪. কার্ড জেনারেট করা
+                snap.forEach(doc => {
+                    const u = doc.data();
+                    const statusBadge = u.loanActive ? 
+                        `<span class="bg-orange-500 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">Active Loan</span>` : 
+                        `<span class="bg-teal-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">No Loan</span>`;
+
+                    grid.innerHTML += `
+                        <div class="member-card bg-white rounded-[2.5rem] p-6 shadow-sm flex flex-col justify-between member-row" 
+                             data-search="${u.name} ${u.partnerName || ''} ${u.phone} ${u.nid || ''} ${doc.id}">
+                            
+                            <div class="mb-5">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-lg font-black text-slate-800 leading-none">${u.name}</h3>
+                                    ${statusBadge}
+                                </div>
+                                <p class="text-[9px] font-mono text-gray-400 font-bold mt-1 uppercase tracking-tighter">ID: ${doc.id.substring(0,12).toUpperCase()}</p>
+                            </div>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xs">👤</span>
+                                    <div>
+                                        <p class="info-label">স্বামী/স্ত্রীর নাম</p>
+                                        <p class="info-value text-slate-500">${u.partnerName || 'N/A'}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xs">📞</span>
+                                    <div>
+                                        <p class="info-label">মোবাইল নম্বর</p>
+                                        <p class="info-value font-mono">${u.phone}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xs">💳</span>
+                                    <div>
+                                        <p class="info-label">এনআইডি (NID)</p>
+                                        <p class="info-value font-mono">${u.nid || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 pt-4 border-t border-gray-50">
+                                <button onclick="location.href='scan-view.html?id=${doc.id}'" class="flex-1 bg-slate-900 text-white py-3.5 rounded-2xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition">প্রোফাইল</button>
+                                <button onclick="location.href='customer-card.html'" class="bg-teal-600 text-white px-5 py-3.5 rounded-2xl active:scale-95 transition font-bold text-xs shadow-lg">🖨️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+            } catch (err) {
+                console.error(err);
+                countDisplay.innerText = "ডাটা লোড এরর!";
+                grid.innerHTML = `<p class="col-span-full text-center text-red-500 p-10 font-bold uppercase">ত্রুটি: ${err.message}</p>`;
+            }
+        }
+
+        window.filterMembers = () => {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('.member-row');
+            rows.forEach(row => {
+                const searchData = row.dataset.search.toLowerCase();
+                row.style.display = searchData.includes(input) ? "" : "none";
+            });
+        };
+
+        loadMembers();
+    </script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - লোন আবেদন</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f8fafc; }
+        .calc-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 15px; padding: 15px; }
+    </style>
+</head>
+<body class="pb-10">
+
+    <!-- Header -->
+    <header class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold italic tracking-tighter">আপন | লোন শাখা</h1>
+            <a href="officer-dashboard.html" class="text-xs bg-blue-800 px-4 py-2 rounded-lg font-bold hover:bg-blue-900 transition">ফিরে যান</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 max-w-xl">
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border">
+            <div class="bg-blue-600 p-6 text-white text-center">
+                <h2 class="text-2xl font-black uppercase tracking-tight">লোন আবেদন ফরম</h2>
+                <p class="text-[10px] opacity-80 uppercase tracking-widest mt-1 font-bold">সদস্যের লোন প্রস্তাবনা পূরণ করুন</p>
+            </div>
+
+            <form id="loanAppForm" class="p-6 md:p-8 space-y-5">
+                
+                <!-- সদস্য নির্বাচন -->
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">আপনার সংগৃহীত সদস্য</label>
+                    <select id="memberSelect" class="w-full border-2 border-gray-100 p-3 rounded-xl outline-blue-500 bg-white text-sm font-bold" required>
+                        <option value="">সদস্য লোড হচ্ছে...</option>
+                    </select>
+                </div>
+
+                <!-- লোনের পরিমাণ ও কিস্তি সংখ্যা -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">লোনের পরিমাণ (৳)</label>
+                        <input type="number" id="loanAmount" class="w-full border-2 border-gray-100 p-3 rounded-xl outline-blue-500 font-black text-blue-700" placeholder="উদা: ১০০০০" required>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">মোট কিস্তি সংখ্যা</label>
+                        <input type="number" id="instCount" class="w-full border-2 border-gray-100 p-3 rounded-xl outline-blue-500 font-bold" placeholder="উদা: ৪৫" required>
+                    </div>
+                </div>
+
+                <!-- কিস্তির ধরণ (সাপ্তাহিক/মাসিক) - নতুন যুক্ত হয়েছে -->
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">কিস্তির ধরণ (Scheme)</label>
+                    <select id="loanScheme" onchange="toggleSchemeFields()" class="w-full border-2 border-gray-100 p-3 rounded-xl outline-blue-500 bg-white text-sm font-bold" required>
+                        <option value="Weekly">সাপ্তাহিক (Weekly)</option>
+                        <option value="Monthly">মাসিক (Monthly)</option>
+                    </select>
+                </div>
+
+                <!-- কিস্তি আদায়ের সময় (সাপ্তাহিক বার বা মাসিক তারিখ) -->
+                <div id="weeklyDayBox" class="space-y-1">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">কিস্তি আদায়ের নির্ধারিত দিন</label>
+                    <select id="collectionDay" class="w-full border-2 border-gray-100 p-3 rounded-xl outline-blue-500 bg-white text-sm font-bold">
+                        <option value="Saturday">শনিবার (Saturday)</option>
+                        <option value="Sunday">রবিবার (Sunday)</option>
+                        <option value="Monday">সোমবার (Monday)</option>
+                        <option value="Tuesday">মঙ্গলবার (Tuesday)</option>
+                        <option value="Wednesday">বুধবার (Wednesday)</option>
+                        <option value="Thursday">বৃহস্পতিবার (Thursday)</option>
+                        <option value="Friday">শুক্রবার (Friday)</option>
+                    </select>
+                </div>
+
+                <div id="monthlyDateBox" class="hidden space-y-1">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">কিস্তি আদায়ের নির্ধারিত তারিখ (১-৩০)</label>
+                    <input type="number" id="collectionDate" min="1" max="30" class="w-full border-2 border-gray-100 p-3 rounded-xl outline-blue-500 font-bold" placeholder="উদা: ১০">
+                </div>
+
+                <!-- কিস্তি ক্যালকুলেশন -->
+                <div class="calc-box">
+                    <p id="instTypeLabel" class="text-[10px] text-green-700 font-black uppercase mb-1">সাপ্তাহিক কিস্তি আসবে:</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400 text-xs italic">আদায়ের পরিমাণ:</span>
+                        <span id="perInstText" class="text-2xl font-black text-green-600">৳ ০</span>
+                    </div>
+                </div>
+
+                <!-- নোট -->
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">লোন গ্রহণের উদ্দেশ্য</label>
+                    <input type="text" id="loanNote" class="w-full border-2 border-gray-100 p-3 rounded-xl outline-blue-500 text-sm" placeholder="উদা: ক্ষুদ্র ব্যবসা">
+                </div>
+
+                <!-- সাবমিট বাটন -->
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-blue-700 transition active:scale-95 uppercase tracking-widest text-sm py-4">আবেদন জমা দিন</button>
+                
+                <p id="msg" class="text-center text-xs font-bold mt-2"></p>
+            </form>
+        </div>
+    </main>
+
+    <script type="module">
+        import { db, checkAccess } from './firebase-config.js';
+        import { collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        checkAccess('officer');
+
+        const branchId = localStorage.getItem('branchId');
+        const officerUid = localStorage.getItem('userUid');
+        const officerName = localStorage.getItem('userName');
+
+        // ১. স্কিম অনুযায়ী ফিল্ড দেখানোর লজিক
+        window.toggleSchemeFields = () => {
+            const scheme = document.getElementById('loanScheme').value;
+            const weeklyBox = document.getElementById('weeklyDayBox');
+            const monthlyBox = document.getElementById('monthlyDateBox');
+            const label = document.getElementById('instTypeLabel');
+
+            if (scheme === 'Weekly') {
+                weeklyBox.classList.remove('hidden');
+                monthlyBox.classList.add('hidden');
+                label.innerText = "সাপ্তাহিক কিস্তি আসবে:";
+            } else {
+                weeklyBox.classList.add('hidden');
+                monthlyBox.classList.remove('hidden');
+                label.innerText = "মাসিক কিস্তি আসবে:";
+            }
+            calculate();
+        };
+
+        // ২. শুধুমাত্র এই অফিসারের আন্ডারে থাকা সদস্য লোড করা
+        async function loadMyMembers() {
+            if(!officerUid) return;
+
+            const q = query(collection(db, "users"), 
+                        where("officerId", "==", officerUid), 
+                        where("role", "==", "customer"),
+                        where("loanActive", "==", false));
+            
+            const snap = await getDocs(q);
+            const select = document.getElementById('memberSelect');
+            select.innerHTML = '<option value="">সদস্য সিলেক্ট করুন</option>';
+            
+            if(snap.empty) {
+                select.innerHTML = '<option value="">আপনার কোনো সদস্য লোনের যোগ্য নয়</option>';
+                return;
+            }
+
+            snap.forEach(d => {
+                select.innerHTML += `<option value="${d.id}">${d.data().name} (${d.data().phone})</option>`;
+            });
+        }
+
+        // ৩. রিয়েল-টাইম ক্যালকুলেশন
+        const amountInp = document.getElementById('loanAmount');
+        const countInp = document.getElementById('instCount');
+        const perInstText = document.getElementById('perInstText');
+
+        function calculate() {
+            const amount = Number(amountInp.value) || 0;
+            const count = Number(countInp.value) || 0;
+            const per = count > 0 ? Math.ceil(amount / count) : 0;
+            perInstText.innerText = "৳ " + per.toLocaleString('bn-BD');
+        }
+
+        amountInp.addEventListener('input', calculate);
+        countInp.addEventListener('input', calculate);
+
+        // ৪. আবেদন জমা
+        document.getElementById('loanAppForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const msg = document.getElementById('msg');
+            const memberId = document.getElementById('memberSelect').value;
+            const scheme = document.getElementById('loanScheme').value;
+
+            btn.disabled = true;
+            btn.innerText = "আবেদন পাঠানো হচ্ছে...";
+
+            try {
+                const amount = Number(amountInp.value);
+                const count = Number(countInp.value);
+                const perInst = Math.ceil(amount / count);
+
+                const loanData = {
+                    customerId: memberId,
+                    branchId: branchId,
+                    officerId: officerUid,
+                    officerName: officerName,
+                    totalAmount: amount,
+                    totalInstallments: count,
+                    perInstallment: perInst,
+                    loanScheme: scheme, // Weekly বা Monthly
+                    note: document.getElementById('loanNote').value,
+                    status: "Pending",
+                    createdAt: serverTimestamp()
+                };
+
+                // স্কিম অনুযায়ী ডাটা ফিল্ড সেট করা
+                if (scheme === 'Weekly') {
+                    loanData.collectionDay = document.getElementById('collectionDay').value;
+                } else {
+                    const dateVal = document.getElementById('collectionDate').value;
+                    if(!dateVal || dateVal < 1 || dateVal > 30) throw new Error("সঠিক মাসিক তারিখ দিন (১-৩০)");
+                    loanData.collectionDate = Number(dateVal);
+                }
+
+                await addDoc(collection(db, "loan_requests"), loanData);
+
+                alert("সফল! লোনের আবেদন ম্যানেজারের কাছে পাঠানো হয়েছে।");
+                window.location.href = 'officer-dashboard.html';
+
+            } catch (err) {
+                console.error(err);
+                msg.innerText = "ত্রুটি: " + err.message;
+                msg.style.color = "red";
+                btn.disabled = false;
+                btn.innerText = "আবেদন জমা দিন";
+            }
+        });
+
+        loadMyMembers();
+    </script>
+</body>
+</html>

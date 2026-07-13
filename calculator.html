@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - লোন ক্যালকুলেটর</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f1f5f9; }
+        .calc-card { border-radius: 2.5rem; transition: all 0.3s ease; }
+        .result-box { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff; }
+        .input-box { width: 100%; border: 2px solid #e2e8f0; padding: 14px; border-radius: 1.2rem; outline: none; font-weight: 700; transition: 0.3s; }
+        .input-box:focus { border-color: #4f46e5; background: #fff; }
+    </style>
+</head>
+<body class="p-4 md:p-10 pb-20">
+
+    <div class="max-w-3xl mx-auto">
+        <!-- হেডার -->
+        <div class="bg-indigo-900 p-8 rounded-[2.5rem] text-white text-center shadow-xl mb-8 border-b-8 border-indigo-600">
+            <h1 class="text-3xl font-black italic tracking-tighter uppercase">লোন প্রফিট ক্যালকুলেটর</h1>
+            <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-[0.3em] mt-2">সহজ কিস্তি ও মুনাফা হিসাবকারী</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- ইনপুট সেকশন -->
+            <div class="bg-white p-8 calc-card shadow-sm border border-gray-100 space-y-5">
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">লোনের পরিমাণ (৳)</label>
+                    <input type="number" id="loanAmount" oninput="calculateLoan()" placeholder="১০,০০০" class="input-box bg-slate-50 text-indigo-600 text-xl">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">মুনাফার হার (%)</label>
+                    <input type="number" id="interestRate" oninput="calculateLoan()" value="25" class="input-box bg-slate-50 text-xl">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">কিস্তির ধরণ (Scheme)</label>
+                    <select id="schemeType" onchange="updateDefaultWeeks(); calculateLoan();" class="input-box bg-slate-50">
+                        <option value="Weekly">সাপ্তাহিক (Weekly)</option>
+                        <option value="Monthly">মাসিক (Monthly)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label id="countLabel" class="text-[10px] font-black text-gray-400 uppercase ml-1">মোট কিস্তি সংখ্যা (সপ্তাহ)</label>
+                    <input type="number" id="installCount" oninput="calculateLoan()" value="45" class="input-box bg-slate-50 text-xl">
+                </div>
+            </div>
+
+            <!-- রেজাল্ট সেকশন -->
+            <div class="space-y-6">
+                <!-- মেইন কিস্তি কার্ড -->
+                <div class="result-box p-8 rounded-[3rem] shadow-2xl relative overflow-hidden text-center md:text-left">
+                    <p class="text-xs font-bold uppercase text-indigo-300 tracking-widest mb-1">প্রতি কিস্তির পরিমাণ</p>
+                    <h2 id="perInstallment" class="text-6xl font-black text-white tracking-tighter">৳ ০</h2>
+                    
+                    <div class="mt-8 pt-6 border-t border-white/10 grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-[9px] font-bold uppercase text-gray-400">মোট আসল</p>
+                            <h4 id="resPrincipal" class="text-lg font-black">৳ ০</h4>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[9px] font-bold uppercase text-emerald-400">মোট মুনাফা (লাভ)</p>
+                            <h4 id="resProfit" class="text-lg font-black text-emerald-400">৳ ০</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- বিস্তারিত সামারি -->
+                <div class="bg-white p-6 calc-card shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs font-black text-slate-400 uppercase">মোট পরিশোধযোগ্য</span>
+                        <span id="resTotal" class="text-xl font-black text-indigo-600">৳ ০</span>
+                    </div>
+                    <div class="h-px bg-slate-100 mb-4"></div>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase">প্রফিট পার্সেন্টেজ</p>
+                            <h4 id="resPercent" class="text-2xl font-black text-slate-800">০%</h4>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase">সময়কাল</p>
+                            <h4 id="resDuration" class="text-sm font-bold text-slate-600">...</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-10 p-6 bg-indigo-50 rounded-[2rem] border border-indigo-100 text-center">
+            <p class="text-xs text-indigo-700 font-medium italic">
+                * এই হিসাবটি ফ্ল্যাট (Flat Interest) পদ্ধতিতে করা হয়েছে। কিস্তির সংখ্যা পরিবর্তন করলে প্রফিট মার্জিনে কোনো প্রভাব পড়বে না।
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function updateDefaultWeeks() {
+            const scheme = document.getElementById('schemeType').value;
+            const countInput = document.getElementById('installCount');
+            const label = document.getElementById('countLabel');
+
+            if (scheme === 'Weekly') {
+                countInput.value = "45";
+                label.innerText = "মোট কিস্তি সংখ্যা (সপ্তাহ)";
+            } else {
+                countInput.value = "12";
+                label.innerText = "মোট কিস্তি সংখ্যা (মাস)";
+            }
+        }
+
+        function calculateLoan() {
+            // ১. ইনপুট ডাটা সংগ্রহ
+            const amount = parseFloat(document.getElementById('loanAmount').value) || 0;
+            const rate = parseFloat(document.getElementById('interestRate').value) || 0;
+            const count = parseInt(document.getElementById('installCount').value) || 1;
+            const scheme = document.getElementById('schemeType').value;
+
+            if (amount <= 0) {
+                resetUI();
+                return;
+            }
+
+            // ২. মুনাফা হিসাব (Flat Rate Method)
+            const profit = (amount * rate) / 100;
+            const totalPayable = amount + profit;
+            const perInstallment = Math.ceil(totalPayable / count);
+
+            // ৩. সময়কাল হিসাব
+            let durationText = "";
+            if(scheme === 'Weekly') {
+                durationText = (count / 4.3).toFixed(1) + " মাস (প্রায়)";
+            } else {
+                durationText = count + " মাস";
+            }
+
+            // ৪. UI আপডেট
+            document.getElementById('perInstallment').innerText = "৳ " + perInstallment.toLocaleString('bn-BD');
+            document.getElementById('resPrincipal').innerText = "৳ " + amount.toLocaleString('bn-BD');
+            document.getElementById('resProfit').innerText = "৳ " + profit.toLocaleString('bn-BD');
+            document.getElementById('resTotal').innerText = "৳ " + totalPayable.toLocaleString('bn-BD');
+            document.getElementById('resPercent').innerText = rate + "%";
+            document.getElementById('resDuration').innerText = durationText;
+        }
+
+        function resetUI() {
+            document.getElementById('perInstallment').innerText = "৳ ০";
+            document.getElementById('resPrincipal').innerText = "৳ ০";
+            document.getElementById('resProfit').innerText = "৳ ০";
+            document.getElementById('resTotal').innerText = "৳ ০";
+            document.getElementById('resPercent').innerText = "০%";
+            document.getElementById('resDuration').innerText = "...";
+        }
+
+        // শুরুতে একবার কল করা
+        calculateLoan();
+    </script>
+</body>
+</html>

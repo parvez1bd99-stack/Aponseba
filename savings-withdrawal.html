@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - সঞ্চয় উত্তোলন</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f8fafc; }
+        .search-results { max-height: 250px; overflow-y: auto; }
+        .detail-row { display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding: 10px 0; }
+        .detail-row:last-child { border-bottom: none; }
+    </style>
+</head>
+<body class="p-4 md:p-8 pb-20">
+
+    <div class="max-w-2xl mx-auto">
+        <!-- আধুনিক হেডার -->
+        <div class="flex justify-between items-center mb-8 bg-orange-600 p-6 rounded-[2rem] shadow-lg text-white">
+            <div>
+                <h1 class="text-2xl font-black uppercase tracking-tight italic">সঞ্চয় উত্তোলন</h1>
+                <p class="text-[10px] opacity-80 uppercase font-bold tracking-widest">Savings Refund Panel</p>
+            </div>
+            <button onclick="history.back()" class="bg-orange-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-orange-800 transition">فিরে যান</button>
+        </div>
+
+        <!-- মেম্বার সার্চ সেকশন -->
+        <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100 mb-6">
+            <label class="text-[11px] font-black text-gray-400 uppercase ml-2 mb-2 block">সদস্য খুঁজুন (নাম বা মোবাইল)</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-4 flex items-center text-gray-400">🔍</span>
+                <input type="text" id="memberSearchInput" onkeyup="searchMembers()" placeholder="সদস্যের নাম বা ফোন লিখুন..." 
+                    class="w-full bg-gray-50 border-2 border-gray-50 p-4 pl-12 rounded-2xl outline-orange-500 text-sm transition focus:bg-white">
+            </div>
+
+            <!-- সার্চ রেজাল্ট লিস্ট -->
+            <div id="searchResults" class="search-results hidden mt-4 space-y-2">
+                <!-- জাভাস্ক্রিপ্ট দিয়ে মেম্বার লিস্ট আসবে -->
+            </div>
+        </div>
+
+        <!-- মেম্বার ডিটেইলস এবং উত্তোলন ফরম -->
+        <div id="withdrawalArea" class="hidden animate-fade-in">
+            <!-- মেম্বার ইনফো কার্ড -->
+            <div class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border mb-6">
+                <div class="bg-slate-900 p-8 text-white text-center">
+                    <p class="text-[10px] uppercase font-bold text-orange-400 mb-1">নির্বাচিত সদস্যের বর্তমান ব্যালেন্স</p>
+                    <h2 id="currentSav" class="text-5xl font-black tracking-tighter text-white">৳ ০</h2>
+                    <h3 id="mName" class="text-xl font-bold mt-4">...</h3>
+                </div>
+
+                <div class="p-8 space-y-1">
+                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-orange-500 rounded-full"></span> মেম্বার ভেরিফিকেশন
+                    </h4>
+                    <div class="detail-row">
+                        <span class="text-xs text-gray-500">📞 মোবাইল নম্বর</span>
+                        <span id="mPhone" class="text-xs font-bold text-slate-700">...</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="text-xs text-gray-500">💳 এনআইডি (NID)</span>
+                        <span id="mNid" class="text-xs font-bold text-slate-700">...</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="text-xs text-gray-500">📍 বিস্তারিত ঠিকানা</span>
+                        <span id="mAddress" class="text-[11px] font-bold text-slate-600 text-right ml-10 italic">...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- উত্তোলন ইনপুট -->
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+                <form id="withdrawalForm" class="space-y-5">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-2 mb-2 block">উত্তোলনের পরিমাণ (৳)</label>
+                        <input type="number" id="withdrawAmt" class="w-full border-2 border-gray-100 p-4 rounded-2xl outline-orange-600 font-black text-2xl text-orange-600 bg-gray-50" placeholder="০.০০" required>
+                    </div>
+
+                    <div class="p-4 bg-orange-50 border-l-4 border-orange-500 rounded-xl text-[10px] text-orange-800 font-bold leading-relaxed">
+                        ⚠️ সতর্কতা: ম্যানেজার হিসেবে আপনি এই মেম্বারকে নগদ টাকা প্রদান করছেন। নিশ্চিত হয়ে 'নিশ্চিত করুন' বাটনে ক্লিক করুন।
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="w-full bg-orange-600 text-white py-5 rounded-2xl font-black shadow-lg hover:bg-orange-700 transition active:scale-95 uppercase tracking-widest text-sm">টাকা ফেরত প্রদান নিশ্চিত করুন</button>
+                    
+                    <button type="button" onclick="resetSelection()" class="w-full text-[10px] font-bold text-gray-400 uppercase mt-2">অন্য মেম্বার খুঁজুন</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- লোডার -->
+        <div id="initialLoader" class="text-center py-20">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto"></div>
+            <p class="text-gray-400 text-xs mt-4 font-bold uppercase">সদস্য ডাটাবেস লোড হচ্ছে...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, checkAccess } from './firebase-config.js';
+        import { collection, query, where, getDocs, doc, getDoc, serverTimestamp, writeBatch, increment } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        checkAccess('manager'); 
+
+        const branchId = localStorage.getItem('branchId');
+        let allBranchMembers = [];
+        let selectedMemberId = null;
+        let selectedMemberBalance = 0;
+
+        // ১. শুরুতে সব মেম্বার একবার লোড করে রাখা (স্মার্ট সার্চের জন্য)
+        async function fetchAllMembers() {
+            try {
+                const q = query(collection(db, "users"), 
+                            where("branchId", "==", branchId), 
+                            where("role", "==", "customer"));
+
+                const snap = await getDocs(q);
+                allBranchMembers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                document.getElementById('initialLoader').classList.add('hidden');
+            } catch (err) { console.error(err); }
+        }
+
+        // ২. কি-বোর্ড টাইপিংয়ের সাথে সার্চ ফাংশন
+        window.searchMembers = () => {
+            const input = document.getElementById('memberSearchInput').value.toLowerCase();
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (input.length < 2) {
+                resultsDiv.innerHTML = "";
+                resultsDiv.classList.add('hidden');
+                return;
+            }
+
+            const filtered = allBranchMembers.filter(m => 
+                m.name.toLowerCase().includes(input) || m.phone.includes(input)
+            );
+
+            resultsDiv.innerHTML = filtered.map(m => `
+                <div onclick="selectMember('${m.id}')" class="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm cursor-pointer hover:bg-orange-50 transition flex justify-between items-center">
+                    <div>
+                        <p class="font-black text-slate-800">${m.name}</p>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase">📞 ${m.phone}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs font-black text-orange-600">৳ ${m.totalSavings.toLocaleString('bn-BD')}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            resultsDiv.classList.remove('hidden');
+        };
+
+        // ৩. মেম্বার সিলেক্ট করা এবং বিস্তারিত তথ্য দেখানো
+        window.selectMember = async (id) => {
+            const member = allBranchMembers.find(m => m.id === id);
+            if (!member) return;
+
+            selectedMemberId = id;
+            selectedMemberBalance = member.totalSavings || 0;
+
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('memberSearchInput').value = member.name;
+            
+            // ডিটেইলস সেট করা
+            document.getElementById('mName').innerText = member.name;
+            document.getElementById('mPhone').innerText = member.phone;
+            document.getElementById('mNid').innerText = member.nid || "তথ্য নেই";
+            document.getElementById('mAddress').innerText = member.address || "ঠিকানা দেওয়া নেই";
+            document.getElementById('currentSav').innerText = "৳ " + selectedMemberBalance.toLocaleString('bn-BD');
+
+            document.getElementById('withdrawalArea').classList.remove('hidden');
+            window.scrollTo({ top: document.getElementById('withdrawalArea').offsetTop, behavior: 'smooth' });
+        };
+
+        // ৪. রিসেট বাটন
+        window.resetSelection = () => {
+            selectedMemberId = null;
+            document.getElementById('withdrawalArea').classList.add('hidden');
+            document.getElementById('memberSearchInput').value = "";
+            document.getElementById('memberSearchInput').focus();
+        };
+
+        // ৫. ফরম সাবমিট (টাকা উত্তোলন)
+        document.getElementById('withdrawalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const amount = Number(document.getElementById('withdrawAmt').value);
+
+            if (amount > selectedMemberBalance) return alert("ত্রুটি: সদস্যের একাউন্টে পর্যাপ্ত টাকা নেই!");
+            if (amount <= 0) return alert("সঠিক পরিমাণ লিখুন!");
+            if (!confirm(`আপনি কি নিশ্চিতভাবে ${amount} টাকা ফেরত দিতে চান?`)) return;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "প্রসেসিং হচ্ছে...";
+
+            try {
+                const batch = writeBatch(db);
+                const userRef = doc(db, "users", selectedMemberId);
+
+                // ব্যালেন্স কমানো
+                batch.update(userRef, { totalSavings: increment(-amount) });
+
+                // ট্রানজ্যাকশন রেকর্ড
+                const transRef = doc(collection(db, "transactions"));
+                batch.set(transRef, {
+                    customerId: selectedMemberId,
+                    branchId: branchId,
+                    amount: amount,
+                    type: "Savings Withdrawal",
+                    date: serverTimestamp(),
+                    note: "ম্যানেজার কর্তৃক সরাসরি সঞ্চয় উত্তোলন",
+                    processedBy: localStorage.getItem('userName')
+                });
+
+                await batch.commit();
+                alert("সফল! সঞ্চয় উত্তোলন সম্পন্ন হয়েছে।");
+                location.reload();
+
+            } catch (err) {
+                alert("ত্রুটি: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "টাকা ফেরত প্রদান নিশ্চিত করুন";
+            }
+        });
+
+        fetchAllMembers();
+    </script>
+</body>
+</html>

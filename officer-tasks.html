@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - স্মার্ট টাস্ক লিস্ট</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f1f5f9; }
+        .stat-card { border-radius: 1.5rem; }
+        .member-card { transition: all 0.3s ease; border: 1px solid rgba(0,0,0,0.05); }
+        .progress-bg { background: #e2e8f0; height: 6px; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; transition: width 1s ease-in-out; }
+    </style>
+</head>
+<body class="pb-20">
+
+    <header class="bg-teal-800 text-white p-5 sticky top-0 z-50 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <div>
+                <h1 id="pageTitle" class="text-xl font-black italic tracking-tighter uppercase">টাস্ক লিস্ট</h1>
+                <p id="displayDayName" class="text-[10px] uppercase font-bold text-teal-200 mt-0.5 tracking-widest italic">আজকের ডিউটি লোড হচ্ছে...</p>
+            </div>
+            <button onclick="history.back()" class="bg-teal-700 p-2 rounded-xl text-xs font-bold px-4">ফিরে যান</button>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 max-w-2xl">
+        
+        <!-- তারিখ ফিল্টার (ডিফল্ট আজকের ডেট থাকবে) -->
+        <div class="bg-white p-4 rounded-3xl shadow-sm mb-6 border border-teal-50 flex items-center gap-4">
+            <div class="flex-1">
+                <label class="text-[9px] font-black text-gray-400 uppercase ml-1">অন্য তারিখের কিস্তি দেখুন</label>
+                <input type="date" id="taskDatePicker" class="w-full border-none bg-transparent font-black text-teal-700 outline-none text-base">
+            </div>
+            <button onclick="loadTasks()" class="bg-teal-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md active:scale-95 transition">খুঁজুন</button>
+        </div>
+
+        <!-- ডিউটি ও ক্যাশ সামারি -->
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="stat-card bg-white p-4 shadow-sm border-l-4 border-orange-500">
+                <p class="text-[9px] font-bold text-gray-400 uppercase">আদায়ের লক্ষ্য</p>
+                <h3 id="statTarget" class="text-lg font-black text-slate-800 tracking-tighter">৳ ০</h3>
+            </div>
+            <div class="stat-card bg-white p-4 shadow-sm border-l-4 border-green-500">
+                <p class="text-[9px] font-bold text-gray-400 uppercase">কিস্তি আদায়</p>
+                <h3 id="statLoanColl" class="text-lg font-black text-green-600 tracking-tighter">৳ ০</h3>
+            </div>
+            <div class="stat-card bg-white p-4 shadow-sm border-l-4 border-blue-500">
+                <p class="text-[9px] font-bold text-gray-400 uppercase">সঞ্চয় আদায়</p>
+                <h3 id="statSavColl" class="text-lg font-black text-blue-600 tracking-tighter">৳ ০</h3>
+            </div>
+            <div class="stat-card bg-slate-900 p-4 shadow-lg text-white">
+                <p class="text-[9px] font-bold text-teal-400 uppercase">মোট ক্যাশ</p>
+                <h3 id="statNetCash" class="text-lg font-black tracking-tighter">৳ ০</h3>
+            </div>
+        </div>
+
+        <!-- ট্যাব সুইচ -->
+        <div class="flex items-center gap-2 mb-6 bg-white p-1.5 rounded-2xl shadow-sm border">
+            <button onclick="switchTab('pending')" id="tabPending" class="flex-1 py-3 rounded-xl text-xs font-black transition-all bg-teal-600 text-white shadow-lg">
+                বাকি আছে (<span id="countPending">০</span>)
+            </button>
+            <button onclick="switchTab('done')" id="tabDone" class="flex-1 py-3 rounded-xl text-xs font-black transition-all text-gray-400">
+                সম্পন্ন (<span id="countDone">০</span>)
+            </button>
+        </div>
+
+        <!-- মেম্বার লিস্ট এরিয়া -->
+        <div id="listArea" class="space-y-4">
+            <p class="text-center text-gray-400 py-20 italic">আজকের তথ্য খোঁজা হচ্ছে...</p>
+        </div>
+    </main>
+
+    <script type="module">
+        import { db, checkAccess } from './firebase-config.js';
+        import { collection, query, where, getDocs, doc, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        checkAccess(); 
+
+        const loggedInRole = localStorage.getItem('userRole');
+        const loggedInUid = localStorage.getItem('userUid');
+        let officerUid = (loggedInRole === 'officer') ? loggedInUid : localStorage.getItem('monitor_off_uid');
+
+        const daysInEnglish = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const datePicker = document.getElementById('taskDatePicker');
+        
+        // ১. অটোমেটিক আজকের তারিখ সেট করা (ডিফল্ট ভ্যালু)
+        const now = new Date();
+        const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+        datePicker.value = todayStr;
+
+        let pendingMembers = [];
+        let doneMembers = [];
+        let currentTab = 'pending';
+
+        async function loadTasks() {
+            if(!officerUid) return;
+
+            const selectedDateValue = datePicker.value;
+            const selectedDate = new Date(selectedDateValue);
+            
+            const dayName = daysInEnglish[selectedDate.getDay()];
+            const dateNum = selectedDate.getDate();
+
+            // বারের নাম বাংলা বানান ফিক্স
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            document.getElementById('displayDayName').innerText = dayName + " (" + selectedDate.toLocaleDateString('bn-BD', options) + ")";
+            
+            const listArea = document.getElementById('listArea');
+            listArea.innerHTML = `<p class="text-center py-20 text-gray-400">অপেক্ষা করুন...</p>`;
+
+            try {
+                // ২. লোন ডাটা সংগ্রহ
+                const q = query(collection(db, "loans"), where("officerId", "==", officerUid), where("status", "==", "Active"));
+                const loanSnap = await getDocs(q);
+                
+                // ৩. তারিখের রেঞ্জ নির্ধারণ
+                const startRange = new Date(selectedDateValue); startRange.setHours(0,0,0,0);
+                const endRange = new Date(selectedDateValue); endRange.setHours(23,59,59,999);
+                
+                const tq = query(collection(db, "transactions"), where("branchId", "==", localStorage.getItem('branchId')));
+                const tSnap = await getDocs(tq);
+
+                let targetTotal = 0, loanCollTotal = 0, savCollTotal = 0;
+                pendingMembers = []; doneMembers = [];
+
+                const dayTransactions = [];
+                tSnap.forEach(tDoc => {
+                    const tData = tDoc.data();
+                    if(tData.date && tData.collectedBy === officerUid) {
+                        const tTime = tData.date.toDate().getTime();
+                        if(tTime >= startRange.getTime() && tTime <= endRange.getTime()) {
+                            dayTransactions.push(tData);
+                            if(tData.type === "Loan Payment") loanCollTotal += Number(tData.amount || 0);
+                            if(tData.type === "Savings Deposit") savCollTotal += Number(tData.amount || 0);
+                        }
+                    }
+                });
+
+                for (const lDoc of loanSnap.docs) {
+                    const loan = lDoc.data();
+                    let isOnDuty = false;
+                    const scheme = loan.loanScheme || 'Weekly';
+
+                    if (scheme === 'Weekly' && loan.collectionDay === dayName) isOnDuty = true;
+                    else if (scheme === 'Monthly' && Number(loan.collectionDate) === dateNum) isOnDuty = true;
+
+                    if (isOnDuty) {
+                        targetTotal += Number(loan.perInstallment || 0);
+                        const uSnap = await getDoc(doc(db, "users", loan.customerId));
+                        
+                        if(uSnap.exists()){
+                            const user = uSnap.data();
+                            const loanId = lDoc.id;
+                            let paidOnThisDate = dayTransactions.some(t => t.loanId === loanId && t.type === "Loan Payment");
+
+                            const memberData = {
+                                id: loanId,
+                                name: user.name,
+                                phone: user.phone,
+                                savings: user.totalSavings || 0,
+                                amount: loan.perInstallment,
+                                remaining: loan.remainingAmount,
+                                paidInst: loan.paidInstallments || 0,
+                                totalInst: loan.totalInstallments || 0,
+                                scheme: scheme
+                            };
+
+                            if (paidOnThisDate) doneMembers.push(memberData);
+                            else pendingMembers.push(memberData);
+                        }
+                    }
+                }
+
+                document.getElementById('statTarget').innerText = "৳ " + targetTotal.toLocaleString('bn-BD');
+                document.getElementById('statLoanColl').innerText = "৳ " + loanCollTotal.toLocaleString('bn-BD');
+                document.getElementById('statSavColl').innerText = "৳ " + savCollTotal.toLocaleString('bn-BD');
+                document.getElementById('statNetCash').innerText = "৳ " + (loanCollTotal + savCollTotal).toLocaleString('bn-BD');
+
+                updateUI();
+            } catch (err) { alert("Error: " + err.message); }
+        }
+
+        function updateUI() {
+            const listArea = document.getElementById('listArea');
+            const list = currentTab === 'pending' ? pendingMembers : doneMembers;
+            document.getElementById('countPending').innerText = pendingMembers.length;
+            document.getElementById('countDone').innerText = doneMembers.length;
+            
+            if (list.length === 0) {
+                listArea.innerHTML = `<div class="bg-white p-10 rounded-[2rem] text-center border-2 border-dashed text-gray-400 font-bold uppercase text-xs">আজকের কোনো ডিউটি পাওয়া যায়নি</div>`;
+                return;
+            }
+
+            listArea.innerHTML = list.map(m => {
+                const progress = Math.round((m.paidInst / m.totalInst) * 100);
+                return `
+                <div class="member-card bg-white p-5 rounded-[2rem] shadow-sm mb-4">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center text-xl font-black">${m.name.charAt(0)}</div>
+                            <div>
+                                <h3 class="font-black text-slate-800 leading-none">${m.name}</h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-[8px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-bold uppercase">${m.scheme}</span>
+                                    <a href="tel:${m.phone}" class="text-[10px] text-teal-600 font-bold">📞 ফোন করুন</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[9px] text-gray-400 font-bold uppercase">কিস্তির টাকা</p>
+                            <p class="text-xl font-black text-teal-600 tracking-tighter">৳ ${m.amount.toLocaleString('bn-BD')}</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-gray-100 mb-4">
+                        <div class="flex justify-between text-[10px] font-bold uppercase mb-2">
+                            <span class="text-gray-400">প্রগ্রেস (${m.paidInst}/${m.totalInst})</span>
+                            <span class="text-teal-600">${progress}%</span>
+                        </div>
+                        <div class="progress-bg"><div class="progress-fill bg-teal-500" style="width: ${progress}%"></div></div>
+                        <div class="grid grid-cols-2 mt-3 text-[11px] font-black">
+                            <p class="text-red-500">বাকি: ৳ ${m.remaining.toLocaleString('bn-BD')}</p>
+                            <p class="text-blue-600 text-right">সঞ্চয়: ৳ ${m.savings.toLocaleString('bn-BD')}</p>
+                        </div>
+                    </div>
+
+                    ${currentTab === 'pending' ? 
+                        `<a href="payment-collection.html?loanId=${m.id}" class="w-full bg-teal-600 text-white py-3.5 rounded-2xl text-xs font-black shadow-lg flex items-center justify-center gap-2 uppercase"><span>💸</span> কিস্তি আদায়</a>` : 
+                        `<div class="w-full bg-green-50 text-green-600 py-3.5 rounded-2xl text-xs font-black border border-green-200 flex items-center justify-center gap-2 uppercase"><span>✅</span> কিস্তি সম্পন্ন</div>`
+                    }
+                </div>`;
+            }).join('');
+        }
+
+        window.switchTab = (tab) => {
+            currentTab = tab;
+            document.getElementById('tabPending').className = tab === 'pending' ? "flex-1 py-3 rounded-xl text-xs font-black transition-all bg-teal-600 text-white shadow-lg" : "flex-1 py-3 rounded-xl text-xs font-black transition-all text-gray-400";
+            document.getElementById('tabDone').className = tab === 'done' ? "flex-1 py-3 rounded-xl text-xs font-black transition-all bg-green-600 text-white shadow-lg" : "flex-1 py-3 rounded-xl text-xs font-black transition-all text-gray-400";
+            updateUI();
+        };
+
+        // ৪. পেজ লোড হওয়ার সাথে সাথে ডাটা কল করা
+        loadTasks();
+
+        window.loadTasks = loadTasks;
+    </script>
+</body>
+</html>

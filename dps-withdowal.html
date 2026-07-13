@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - ডিপিএস টাকা উত্তোলন</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f5f3ff; }
+        .search-results { max-height: 250px; overflow-y: auto; }
+        .detail-row { display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding: 10px 0; }
+    </style>
+</head>
+<body class="pb-20">
+
+    <div class="max-w-2xl mx-auto">
+        <!-- হেডার -->
+        <div class="flex justify-between items-center mb-8 bg-indigo-700 p-6 rounded-[2rem] shadow-lg text-white">
+            <div>
+                <h1 class="text-2xl font-black uppercase italic tracking-tight">ডিপিএস উত্তোলন</h1>
+                <p class="text-[10px] opacity-80 uppercase font-bold">DPS Refund Management</p>
+            </div>
+            <button onclick="history.back()" class="bg-indigo-800 px-4 py-2 rounded-xl text-xs font-bold border border-indigo-600">ফিরে যান</button>
+        </div>
+
+        <!-- সদস্য খোঁজা -->
+        <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-indigo-100 mb-6">
+            <label class="text-[11px] font-black text-gray-400 uppercase ml-2 mb-2 block">সদস্য খুঁজুন (নাম বা মোবাইল)</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-4 flex items-center text-gray-400">🔍</span>
+                <input type="text" id="memberSearch" onkeyup="searchDpsMembers()" placeholder="সদস্যের নাম বা ফোন..." 
+                    class="w-full bg-slate-50 border-2 border-slate-50 p-4 pl-12 rounded-2xl outline-indigo-500 text-sm transition focus:bg-white font-bold">
+            </div>
+            <div id="searchResults" class="search-results hidden mt-4 space-y-2">
+                <!-- সার্চ রেজাল্ট আসবে -->
+            </div>
+        </div>
+
+        <!-- উত্তোলন ফরম এরিয়া -->
+        <div id="withdrawalArea" class="hidden animate-fade-in">
+            <!-- মেম্বার ও ডিপিএস ইনফো কার্ড -->
+            <div class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-indigo-100 mb-6">
+                <div class="bg-indigo-900 p-8 text-white text-center">
+                    <p class="text-[10px] uppercase font-bold text-indigo-400 mb-1">মোট ডিপিএস জমা (Balance)</p>
+                    <h2 id="currentDpsBalance" class="text-5xl font-black tracking-tighter">৳ ০</h2>
+                    <h3 id="mName" class="text-xl font-bold mt-4">...</h3>
+                </div>
+
+                <div class="p-8 space-y-1">
+                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 border-b pb-2">নিরাপত্তা যাচাই</h4>
+                    <div class="detail-row"><span class="text-xs text-gray-500">📞 মোবাইল</span><span id="mPhone" class="text-xs font-bold text-slate-700">...</span></div>
+                    <div class="detail-row"><span class="text-xs text-gray-500">👤 স্বামী/স্ত্রী</span><span id="pName" class="text-xs font-bold text-slate-700">...</span></div>
+                    <div class="detail-row"><span class="text-xs text-gray-500">💳 এনআইডি</span><span id="mNid" class="text-xs font-bold font-mono">...</span></div>
+                </div>
+            </div>
+
+            <!-- উত্তোলন ইনপুট ফরম -->
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-indigo-100">
+                <form id="dpsWithdrawalForm" class="space-y-6">
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-2 mb-2 block">উত্তোলনের পরিমাণ (৳)</label>
+                        <input type="number" id="withdrawAmt" class="w-full border-2 border-slate-100 p-5 rounded-3xl outline-indigo-600 font-black text-3xl text-indigo-700 bg-slate-50 text-center" placeholder="০.০০" required>
+                    </div>
+
+                    <div class="p-4 bg-amber-50 border-l-4 border-amber-500 rounded-xl text-[10px] text-amber-800 font-bold leading-relaxed">
+                        ⚠️ সতর্কতা: ডিপিএস ক্লোজ করার সময় বা আংশিক উত্তোলনের সময় মুনাফা সমন্বয় করা হয়েছে কি না তা নিশ্চিত করুন।
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition active:scale-95 uppercase tracking-widest text-sm">ডিপিএস টাকা প্রদান নিশ্চিত করুন</button>
+                    
+                    <button type="button" onclick="location.reload()" class="w-full text-[10px] font-black text-gray-400 uppercase mt-2">অন্য সদস্য খুঁজুন</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="loader" class="text-center py-20">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+            <p class="text-gray-400 text-[10px] font-bold uppercase mt-4">ডিপিএস ডাটাবেস লোড হচ্ছে...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, checkAccess } from './firebase-config.js';
+        import { collection, query, where, getDocs, doc, getDoc, serverTimestamp, writeBatch, increment } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        checkAccess('manager'); 
+        const branchId = localStorage.getItem('branchId');
+
+        let allActiveDps = [];
+        let selectedDpsId = null;
+        let selectedMemberBalance = 0;
+
+        // ১. সব ডিপিএস একাউন্ট মেম্বারসহ লোড করা
+        async function fetchDpsAccounts() {
+            try {
+                const q = query(collection(db, "dps_accounts"), where("branchId", "==", branchId), where("status", "==", "Active"));
+                const snap = await getDocs(q);
+                
+                for(const d of snap.docs) {
+                    const uSnap = await getDoc(doc(db, "users", d.data().customerId));
+                    if(uSnap.exists()) {
+                        allActiveDps.push({
+                            id: d.id,
+                            ...d.data(),
+                            user: uSnap.data()
+                        });
+                    }
+                }
+                document.getElementById('loader').classList.add('hidden');
+            } catch (err) { console.error(err); }
+        }
+
+        // ২. লাইভ সার্চ
+        window.searchDpsMembers = () => {
+            const input = document.getElementById('memberSearch').value.toLowerCase();
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (input.length < 2) {
+                resultsDiv.classList.add('hidden');
+                return;
+            }
+
+            const filtered = allActiveDps.filter(item => 
+                item.user.name.toLowerCase().includes(input) || item.user.phone.includes(input)
+            );
+
+            resultsDiv.innerHTML = filtered.map(item => `
+                <div onclick="selectDpsMember('${item.id}')" class="p-4 bg-white border border-indigo-50 rounded-2xl shadow-sm cursor-pointer hover:bg-indigo-50 transition flex justify-between items-center">
+                    <div>
+                        <p class="font-black text-slate-800">${item.user.name}</p>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase">📞 ${item.user.phone}</p>
+                    </div>
+                    <p class="text-xs font-black text-indigo-600">৳ ${item.totalDeposited.toLocaleString('bn-BD')}</p>
+                </div>
+            `).join('');
+            resultsDiv.classList.remove('hidden');
+        };
+
+        // ৩. মেম্বার সিলেক্ট
+        window.selectDpsMember = (id) => {
+            const item = allActiveDps.find(d => d.id === id);
+            selectedDpsId = id;
+            selectedMemberBalance = item.totalDeposited;
+
+            document.getElementById('mName').innerText = item.user.name;
+            document.getElementById('mPhone').innerText = item.user.phone;
+            document.getElementById('pName').innerText = item.user.partnerName || "N/A";
+            document.getElementById('mNid').innerText = item.user.nid || "N/A";
+            document.getElementById('currentDpsBalance').innerText = "৳ " + selectedMemberBalance.toLocaleString('bn-BD');
+
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('withdrawalArea').classList.remove('hidden');
+            document.getElementById('memberSearch').value = item.user.name;
+        };
+
+        // ৪. উত্তোলন সাবমিট
+        document.getElementById('dpsWithdrawalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const amount = Number(document.getElementById('withdrawAmt').value);
+            const dpsData = allActiveDps.find(d => d.id === selectedDpsId);
+
+            if(amount > selectedMemberBalance) return alert("ত্রুটি: জমার চেয়ে বেশি টাকা উত্তোলন সম্ভব নয়!");
+            if(amount <= 0) return alert("সঠিক পরিমাণ লিখুন!");
+            if(!confirm(`আপনি কি নিশ্চিত যে ${amount} টাকা ফেরত দিতে চান?`)) return;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true; btn.innerText = "প্রসেসিং...";
+
+            try {
+                const batch = writeBatch(db);
+                const dpsRef = doc(db, "dps_accounts", selectedDpsId);
+
+                // ব্যালেন্স কমানো
+                batch.update(dpsRef, { totalDeposited: increment(-amount) });
+
+                // ট্রানজ্যাকশন রেকর্ড
+                batch.set(doc(collection(db, "transactions")), {
+                    customerId: dpsData.customerId,
+                    branchId: branchId,
+                    amount: amount,
+                    type: "DPS Withdrawal",
+                    date: serverTimestamp(),
+                    processedBy: localStorage.getItem('userName'),
+                    note: "ম্যানেজার কর্তৃক ডিপিএস সঞ্চয় ফেরত"
+                });
+
+                await batch.commit();
+                alert("সফল! ডিপিএস টাকা ফেরত দেওয়া হয়েছে।");
+                location.reload();
+
+            } catch (err) { alert(err.message); btn.disabled = false; }
+        });
+
+        fetchDpsAccounts();
+    </script>
+</body>
+</html>

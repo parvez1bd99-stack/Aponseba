@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - লেনদেন বিবরণী</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f1f5f9; }
+        .glass-effect { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .transaction-card:hover { transform: translateY(-2px); transition: all 0.2s ease; }
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body class="pb-10">
+
+    <!-- আধুনিক হেডার -->
+    <header class="bg-indigo-900 text-white p-5 sticky top-0 z-50 shadow-xl no-print">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 p-2 rounded-xl">
+                    <svg class="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-lg font-black tracking-tight leading-none uppercase">লেনদেন বিবরণী</h1>
+                    <p class="text-[10px] text-indigo-300 font-bold uppercase mt-1">শাখা লেজার ও রিপোর্ট</p>
+                </div>
+            </div>
+            <button onclick="history.back()" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-xs font-bold border border-white/20 transition">ফিরে যান</button>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8 max-w-6xl">
+        
+        <!-- ফিল্টার এবং সার্চ সেকশন -->
+        <div class="bg-white p-6 rounded-[2.5rem] shadow-sm mb-8 border border-gray-100 no-print">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-end">
+                <div class="md:col-span-5">
+                    <label class="text-[11px] font-black text-gray-400 uppercase ml-2 mb-2 block">সদস্য খুঁজুন (নাম বা আইডি)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-4 flex items-center text-gray-400">🔍</span>
+                        <input type="text" id="memberIdSearch" onkeyup="renderTable()" placeholder="সদস্যের নাম বা আইডি লিখুন..." 
+                            class="w-full bg-gray-50 border-2 border-gray-50 p-3.5 pl-12 rounded-2xl outline-indigo-500 text-sm transition focus:bg-white focus:border-indigo-100">
+                    </div>
+                </div>
+                <div class="md:col-span-3">
+                    <label class="text-[11px] font-black text-gray-400 uppercase ml-2 mb-2 block">লেনদেনের ধরণ</label>
+                    <select id="typeFilter" onchange="renderTable()" class="w-full bg-gray-50 border-2 border-gray-50 p-3.5 rounded-2xl outline-indigo-500 text-sm font-bold text-gray-600 focus:bg-white">
+                        <option value="all">সব লেনদেন</option>
+                        <option value="Loan Payment">লোন কিস্তি আদায়</option>
+                        <option value="Savings Deposit">সঞ্চয় জমা</option>
+                        <option value="Savings Withdrawal">সঞ্চয় উত্তোলন</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <button onclick="loadTransactions()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition active:scale-95">রিফ্রেশ</button>
+                </div>
+                <div class="md:col-span-2">
+                    <button onclick="window.print()" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-black text-xs uppercase hover:bg-slate-900 transition active:scale-95">প্রিন্ট / PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- কুইক সামারি স্ট্যাটাস (ফিল্টারের উপর ভিত্তি করে পরিবর্তন হবে) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-3xl border border-gray-100">
+                <p class="text-[10px] font-bold text-gray-400 uppercase">মোট আদায়</p>
+                <h3 id="summaryIn" class="text-xl font-black text-green-600 mt-1">৳ ০</h3>
+            </div>
+            <div class="bg-white p-5 rounded-3xl border border-gray-100">
+                <p class="text-[10px] font-bold text-gray-400 uppercase">মোট উত্তোলন</p>
+                <h3 id="summaryOut" class="text-xl font-black text-red-500 mt-1">৳ ০</h3>
+            </div>
+            <div class="bg-white p-5 rounded-3xl border border-gray-100">
+                <p class="text-[10px] font-bold text-gray-400 uppercase">রেকর্ড সংখ্যা</p>
+                <h3 id="transCount" class="text-xl font-black text-indigo-600 mt-1">০ টি</h3>
+            </div>
+            <div class="bg-indigo-50 p-5 rounded-3xl border border-indigo-100">
+                <p class="text-[10px] font-bold text-indigo-400 uppercase">নেট ক্যাশ</p>
+                <h3 id="summaryNet" class="text-xl font-black text-indigo-700 mt-1">৳ ০</h3>
+            </div>
+        </div>
+
+        <!-- লেনদেন তালিকা (বড় স্ক্রিনে টেবিল, ছোট স্ক্রিনে কার্ড) -->
+        <div class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-gray-100">
+            <!-- Desktop Table View -->
+            <div class="hidden md:block">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-[11px] font-black uppercase text-slate-400 border-b">
+                        <tr>
+                            <th class="p-6">তারিখ ও সময়</th>
+                            <th class="p-6">সদস্যের আইডি</th>
+                            <th class="p-6">লেনদেনের ধরণ</th>
+                            <th class="p-6 text-right">টাকার পরিমাণ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionBody" class="text-sm divide-y divide-gray-50">
+                        <!-- ডাটা লোড হবে -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Card View -->
+            <div id="mobileTransactionList" class="md:hidden p-4 space-y-4">
+                <!-- ডাটা কার্ড আকারে লোড হবে -->
+            </div>
+
+            <!-- Loading State -->
+            <div id="loader" class="p-20 text-center">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">ডাটা প্রসেসিং হচ্ছে...</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { db, checkAccess } from './firebase-config.js';
+        import { collection, query, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        checkAccess(); 
+        
+        const branchId = localStorage.getItem('branchId');
+        let allTransactions = [];
+
+        async function loadTransactions() {
+            const loader = document.getElementById('loader');
+            loader.classList.remove('hidden');
+
+            try {
+                // ইনডেক্স ঝামেলা এড়াতে শুধু branchId দিয়ে সার্চ
+                const q = query(collection(db, "transactions"), where("branchId", "==", branchId), limit(500));
+                const snap = await getDocs(q);
+                
+                allTransactions = [];
+                snap.forEach(d => {
+                    allTransactions.push({ id: d.id, ...d.data() });
+                });
+
+                // নতুন ডাটা সবার আগে (Client-side sorting)
+                allTransactions.sort((a, b) => {
+                    const dateA = a.date ? a.date.toDate() : 0;
+                    const dateB = b.date ? b.date.toDate() : 0;
+                    return dateB - dateA;
+                });
+
+                loader.classList.add('hidden');
+                renderTable();
+
+            } catch (err) {
+                console.error(err);
+                loader.innerHTML = `<p class="text-red-500 font-bold p-10">সার্ভার এরর: ${err.message}</p>`;
+            }
+        }
+
+        function renderTable() {
+            const memberIdInput = document.getElementById('memberIdSearch').value.trim().toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+            
+            const tbody = document.getElementById('transactionBody');
+            const mobileList = document.getElementById('mobileTransactionList');
+            
+            // ফিল্টারিং
+            const filteredData = allTransactions.filter(data => {
+                const matchesType = (typeFilter === "all" || data.type === typeFilter);
+                const matchesMember = (memberIdInput === "" || data.customerId.toLowerCase().includes(memberIdInput));
+                return matchesType && matchesMember;
+            });
+
+            // স্ট্যাটিস্টিকস ক্যালকুলেশন
+            let totalIn = 0;
+            let totalOut = 0;
+
+            filteredData.forEach(item => {
+                const amt = Number(item.amount || 0);
+                if (item.type === "Savings Withdrawal") totalOut += amt;
+                else totalIn += amt;
+            });
+
+            // UI আপডেট
+            document.getElementById('summaryIn').innerText = "৳ " + totalIn.toLocaleString('bn-BD');
+            document.getElementById('summaryOut').innerText = "৳ " + totalOut.toLocaleString('bn-BD');
+            document.getElementById('summaryNet').innerText = "৳ " + (totalIn - totalOut).toLocaleString('bn-BD');
+            document.getElementById('transCount').innerText = filteredData.length + " টি";
+
+            if (filteredData.length === 0) {
+                const emptyHtml = `<div class="p-20 text-center text-gray-400 italic">কোনো লেনদেন খুঁজে পাওয়া যায়নি।</div>`;
+                tbody.innerHTML = `<tr><td colspan="4">${emptyHtml}</td></tr>`;
+                mobileList.innerHTML = emptyHtml;
+                return;
+            }
+
+            // ডেস্কটপ টেবিল জেনারেট
+            tbody.innerHTML = filteredData.map(data => {
+                const date = data.date ? data.date.toDate().toLocaleString('bn-BD', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : "---";
+                const isOut = data.type === "Savings Withdrawal";
+                
+                return `
+                    <tr class="hover:bg-slate-50 transition border-b border-gray-50">
+                        <td class="p-6">
+                            <p class="font-bold text-slate-700">${date}</p>
+                        </td>
+                        <td class="p-6">
+                            <p class="font-mono text-xs font-black text-indigo-900 uppercase">ID: ${data.customerId.substring(0,10)}</p>
+                        </td>
+                        <td class="p-6">
+                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase border ${isOut ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}">
+                                ${data.type}
+                            </span>
+                        </td>
+                        <td class="p-6 text-right font-black text-base ${isOut ? 'text-red-600' : 'text-slate-800'}">
+                            ${isOut ? '-' : ''} ৳ ${Number(data.amount).toLocaleString('bn-BD')}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // মোবাইল কার্ড ভিউ জেনারেট
+            mobileList.innerHTML = filteredData.map(data => {
+                const date = data.date ? data.date.toDate().toLocaleString('bn-BD', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}) : "---";
+                const isOut = data.type === "Savings Withdrawal";
+
+                return `
+                    <div class="transaction-card bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="px-3 py-1 rounded-full text-[8px] font-black uppercase ${isOut ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}">
+                                ${data.type}
+                            </span>
+                            <p class="text-[10px] text-gray-400 font-bold">${date}</p>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-[9px] text-gray-400 font-bold uppercase">সদস্য আইডি</p>
+                                <p class="font-mono text-xs font-black text-indigo-900">${data.customerId.substring(0,12).toUpperCase()}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[18px] font-black ${isOut ? 'text-red-600' : 'text-slate-800'}">৳ ${Number(data.amount).toLocaleString('bn-BD')}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.loadTransactions = loadTransactions;
+        window.renderTable = renderTable;
+        
+        loadTransactions();
+    </script>
+</body>
+</html>

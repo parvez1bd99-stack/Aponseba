@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - ইন্ডেক্স সেটআপ হেল্পার</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Hind Siliguri', sans-serif; background-color: #f1f5f9; }</style>
+</head>
+<body class="p-4 md:p-10">
+
+    <div class="max-w-xl mx-auto">
+        <div class="bg-indigo-900 p-8 rounded-t-[2rem] text-white text-center">
+            <h1 class="text-3xl font-black italic tracking-tighter">আপন সেটআপ হেল্পার</h1>
+            <p class="text-xs opacity-70 uppercase tracking-widest mt-2">ইন্ডেক্স এরর ফিক্স করার সহজ উপায়</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-b-[2rem] shadow-xl space-y-6">
+            <div class="p-4 bg-amber-50 border-l-4 border-amber-500 rounded-lg text-xs text-amber-800 leading-relaxed font-bold">
+                নির্দেশনা: নিচের বাটনগুলোতে একটি একটি করে ক্লিক করুন। যদি কোনো বাটন ক্লিক করার পর নিচে লাল রঙের লিঙ্ক আসে, তবে ঐ লিঙ্কে ক্লিক করে ইন্ডেক্স তৈরি করে নিন।
+            </div>
+
+            <!-- বাটন লিস্ট -->
+            <div class="space-y-4">
+                <button onclick="triggerIndex('tasks')" class="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold text-sm shadow-lg active:scale-95 transition uppercase">১. টাস্ক লিস্ট ইন্ডেক্স চেক</button>
+                
+                <button onclick="triggerIndex('overdue')" class="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold text-sm shadow-lg active:scale-95 transition uppercase">২. মেম্বার লিস্ট (বকেয়া) ইন্ডেক্স চেক</button>
+                
+                <button onclick="triggerIndex('reports')" class="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold text-sm shadow-lg active:scale-95 transition uppercase">৩. লেনদেন ও রিপোর্ট ইন্ডেক্স চেক</button>
+                
+                <button onclick="triggerIndex('expenses')" class="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold text-sm shadow-lg active:scale-95 transition uppercase">৪. অফিস খরচ ইন্ডেক্স চেক</button>
+            </div>
+
+            <!-- এরর লিঙ্ক ডিসপ্লে এরিয়া -->
+            <div id="errorArea" class="hidden mt-8 p-6 bg-red-50 border-2 border-dashed border-red-200 rounded-3xl animate-pulse text-center">
+                <p class="text-red-600 font-black text-sm mb-4 uppercase">ইন্ডেক্স লিঙ্ক পাওয়া গেছে! 👇</p>
+                <a id="indexLink" href="#" target="_blank" class="inline-block bg-red-600 text-white px-6 py-3 rounded-xl font-bold text-xs shadow-xl break-all">Create Index on Firebase</a>
+                <p class="mt-4 text-[10px] text-gray-500 font-bold">উপরের লাল বাটনে ক্লিক করে 'Desktop Mode' অন করে ইন্ডেক্স তৈরি করুন।</p>
+            </div>
+
+            <div id="successArea" class="hidden mt-8 p-6 bg-green-50 border-2 border-dashed border-green-200 rounded-3xl text-center">
+                <p class="text-green-600 font-black text-sm uppercase">✅ এই ইন্ডেক্সটি ইতিমধ্যে সচল আছে!</p>
+            </div>
+        </div>
+
+        <a href="index.html" class="block text-center mt-10 text-gray-400 font-bold underline text-xs">লগইন পেজে ফিরে যান</a>
+    </div>
+
+    <script type="module">
+        import { db, auth } from './firebase-config.js';
+        import { collection, query, where, getDocs, orderBy, limit, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        window.triggerIndex = async (type) => {
+            const errorArea = document.getElementById('errorArea');
+            const successArea = document.getElementById('successArea');
+            const indexLink = document.getElementById('indexLink');
+            
+            errorArea.classList.add('hidden');
+            successArea.classList.add('hidden');
+
+            const branchId = localStorage.getItem('branchId') || "test_branch";
+            const userUid = localStorage.getItem('userUid') || "test_uid";
+
+            try {
+                let q;
+                const today = new Date();
+                today.setHours(0,0,0,0);
+
+                if (type === 'tasks') {
+                    q = query(collection(db, "loans"), 
+                        where("officerId", "==", userUid),
+                        where("collectionDay", "==", "Saturday"),
+                        where("status", "==", "Active"));
+                } 
+                else if (type === 'overdue') {
+                    q = query(collection(db, "loans"), 
+                        where("branchId", "==", branchId),
+                        where("status", "==", "Active"),
+                        orderBy("disbursedDate", "desc"));
+                }
+                else if (type === 'reports') {
+                    q = query(collection(db, "transactions"), 
+                        where("branchId", "==", branchId),
+                        where("type", "==", "Loan Payment"),
+                        orderBy("date", "desc"));
+                }
+                else if (type === 'expenses') {
+                    q = query(collection(db, "expenses"), 
+                        where("branchId", "==", branchId),
+                        orderBy("date", "desc"));
+                }
+
+                await getDocs(q);
+                successArea.classList.remove('hidden');
+
+            } catch (err) {
+                console.error(err);
+                // ফায়ারবেস এরর মেসেজ থেকে লিঙ্কটি খুঁজে বের করা
+                const linkMatch = err.message.match(/https:\/\/console\.firebase\.google\.com[^\s]+/);
+                
+                if (linkMatch) {
+                    errorArea.classList.remove('hidden');
+                    indexLink.href = linkMatch[0];
+                } else {
+                    alert("এরর: " + err.message);
+                }
+            }
+        };
+    </script>
+</body>
+</html>

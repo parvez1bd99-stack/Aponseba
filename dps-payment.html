@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - ডিপিএস কিস্তি আদায়</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f5f3ff; }
+        .member-item:active { transform: scale(0.98); }
+        .input-focus:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="pb-10">
+
+    <header class="bg-indigo-700 text-white p-4 shadow-md sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold italic uppercase tracking-tighter">আপন | ডিপিএস আদায়</h1>
+            <a href="officer-dashboard.html" class="text-xs bg-indigo-800 px-4 py-2 rounded-lg font-bold">ফিরে যান</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 max-w-xl">
+        
+        <!-- সদস্য নির্বাচন সেকশন -->
+        <div id="searchSection" class="bg-white rounded-3xl shadow-xl overflow-hidden border border-indigo-100 mb-6">
+            <div class="bg-indigo-600 p-5 text-white text-center">
+                <h2 class="text-lg font-black uppercase tracking-tight">ডিপিএস সদস্য খুঁজুন</h2>
+                <p class="text-[10px] opacity-80 font-bold uppercase tracking-widest mt-1 font-bold italic">মেম্বার সার্চ করে কিস্তি জমা নিন</p>
+            </div>
+            
+            <div class="p-5">
+                <div class="relative mb-4">
+                    <span class="absolute inset-y-0 left-4 flex items-center text-gray-400">🔍</span>
+                    <input type="text" id="searchInput" onkeyup="filterDpsMembers()" placeholder="নাম বা মোবাইল দিয়ে খুঁজুন..." 
+                        class="w-full bg-slate-50 border-2 border-slate-50 p-4 pl-12 rounded-2xl outline-indigo-600 text-sm font-bold transition focus:bg-white">
+                </div>
+
+                <div id="loader" class="text-center py-10">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                </div>
+
+                <div id="dpsList" class="space-y-2 hidden max-height-[400px] overflow-y-auto">
+                    <!-- মেম্বার কার্ড আসবে -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ডিপিএস পেমেন্ট ফরম -->
+        <div id="paymentArea" class="hidden animate-fade-in">
+            <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-indigo-100">
+                <div class="bg-slate-900 p-6 text-white text-center">
+                    <div id="mName" class="text-xl font-black">...</div>
+                    <p id="mInfo" class="text-[10px] text-indigo-400 font-bold uppercase mt-1">...</p>
+                </div>
+
+                <div class="p-6 space-y-6">
+                    <div class="bg-indigo-50 p-5 rounded-2xl border border-indigo-100 grid grid-cols-2 gap-4 shadow-inner">
+                        <div>
+                            <p class="text-[9px] text-gray-400 font-bold uppercase">মোট জমা হয়েছে</p>
+                            <p id="totalDepositedText" class="text-xl font-black text-indigo-700">৳ ০</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[9px] text-gray-400 font-bold uppercase">নির্ধারিত কিস্তি</p>
+                            <p id="instAmtText" class="text-xl font-black text-slate-700">৳ ০</p>
+                        </div>
+                        <div class="col-span-2 border-t border-indigo-200 pt-2 flex justify-between items-center">
+                            <p class="text-[9px] text-gray-400 font-bold uppercase">মোট কিস্তি জমা</p>
+                            <p id="paidInstCount" class="text-sm font-black text-indigo-600">০ মাস</p>
+                        </div>
+                    </div>
+
+                    <form id="dpsPaymentForm" class="space-y-5">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">জমার পরিমাণ (৳)</label>
+                            <input type="number" id="payAmount" class="w-full border-2 border-slate-100 p-5 rounded-3xl input-focus font-black text-indigo-700 text-3xl bg-slate-50 text-center" required>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition active:scale-95 uppercase tracking-widest text-sm">ডিপিএস কিস্তি জমা নিন</button>
+                        
+                        <button type="button" onclick="resetSelection()" class="w-full text-center text-[10px] text-gray-400 font-black uppercase mt-2">অন্য সদস্য খুঁজুন</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { db, checkAccess } from './firebase-config.js';
+        import { collection, query, where, getDocs, doc, getDoc, serverTimestamp, writeBatch, increment } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        checkAccess('officer'); 
+
+        const branchId = localStorage.getItem('branchId');
+        const officerUid = localStorage.getItem('userUid');
+        const userName = localStorage.getItem('userName');
+        
+        let allDpsAccounts = [];
+        let selectedDpsAccount = null;
+
+        // ১. সব ডিপিএস লোড এবং অটো-সিলেক্ট চেক
+        async function fetchDpsData() {
+            try {
+                const q = query(collection(db, "dps_accounts"), 
+                            where("officerId", "==", officerUid), 
+                            where("status", "==", "Active"));
+
+                const snap = await getDocs(q);
+                allDpsAccounts = [];
+
+                for(const d of snap.docs) {
+                    const uSnap = await getDoc(doc(db, "users", d.data().customerId));
+                    if(uSnap.exists()) {
+                        allDpsAccounts.push({
+                            id: d.id,
+                            dpsData: d.data(),
+                            userData: uSnap.data()
+                        });
+                    }
+                }
+
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('dpsList').classList.remove('hidden');
+                renderList(allDpsAccounts);
+
+                // *** ফিক্সড লজিক: ইউআরএল থেকে dpsId রিড করা ***
+                const urlParams = new URLSearchParams(window.location.search);
+                const autoDpsId = urlParams.get('dpsId');
+                if(autoDpsId) {
+                    selectDpsMember(autoDpsId);
+                }
+
+            } catch (err) { console.error(err); }
+        }
+
+        function renderList(data) {
+            const listDiv = document.getElementById('dpsList');
+            if(data.length === 0) {
+                listDiv.innerHTML = '<p class="text-center text-gray-400 py-10 font-bold uppercase text-xs">আপনার কোনো ডিপিএস সদস্য নেই</p>';
+                return;
+            }
+            listDiv.innerHTML = data.map(item => `
+                <div onclick="selectDpsMember('${item.id}')" class="member-item p-4 bg-white border border-indigo-50 rounded-2xl cursor-pointer hover:bg-indigo-50 transition flex justify-between items-center mb-2 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center font-black text-white shadow-sm">${item.userData.name.charAt(0)}</div>
+                        <div>
+                            <p class="font-black text-slate-800">${item.userData.name}</p>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase">📞 ${item.userData.phone}</p>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-indigo-500 font-black uppercase">সিলেক্ট ➡️</p>
+                </div>
+            `).join('');
+        }
+
+        window.filterDpsMembers = () => {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allDpsAccounts.filter(item => 
+                item.userData.name.toLowerCase().includes(input) || item.userData.phone.includes(input)
+            );
+            renderList(filtered);
+        };
+
+        // ২. মেম্বার সিলেক্ট এবং ডিটেইলস লোড
+        window.selectDpsMember = (id) => {
+            const item = allDpsAccounts.find(d => d.id === id);
+            if(!item) return;
+
+            selectedDpsAccount = item;
+
+            document.getElementById('mName').innerText = item.userData.name;
+            document.getElementById('mInfo').innerText = `ID: ${item.dpsData.customerId.substring(0,10)} | ${item.userData.phone}`;
+            document.getElementById('totalDepositedText').innerText = "৳ " + item.dpsData.totalDeposited.toLocaleString('bn-BD');
+            document.getElementById('instAmtText').innerText = "৳ " + item.dpsData.installmentAmount;
+            document.getElementById('paidInstCount').innerText = item.dpsData.paidInstallments + " মাস";
+            document.getElementById('payAmount').value = item.dpsData.installmentAmount;
+
+            document.getElementById('searchSection').classList.add('hidden');
+            document.getElementById('paymentArea').classList.remove('hidden');
+            window.scrollTo(0, 0);
+        };
+
+        window.resetSelection = () => {
+            document.getElementById('paymentArea').classList.add('hidden');
+            document.getElementById('searchSection').classList.remove('hidden');
+            document.getElementById('searchInput').value = "";
+            renderList(allDpsAccounts);
+        };
+
+        // ৩. ডিপিএস পেমেন্ট সাবমিট (লজিক অপরিবর্তিত)
+        document.getElementById('dpsPaymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const amount = Number(document.getElementById('payAmount').value);
+            const btn = document.getElementById('submitBtn');
+
+            if(amount <= 0) return alert("সঠিক পরিমাণ লিখুন!");
+            btn.disabled = true; btn.innerText = "সেভ হচ্ছে...";
+
+            try {
+                const batch = writeBatch(db);
+                const dpsRef = doc(db, "dps_accounts", selectedDpsAccount.id);
+
+                batch.update(dpsRef, {
+                    totalDeposited: increment(amount),
+                    paidInstallments: increment(1)
+                });
+
+                batch.set(doc(collection(db, "transactions")), {
+                    customerId: selectedDpsAccount.dpsData.customerId,
+                    dpsId: selectedDpsAccount.id,
+                    amount: amount,
+                    type: "DPS Installment",
+                    branchId: branchId,
+                    officerId: officerUid,
+                    collectedBy: officerUid,
+                    officerName: userName,
+                    date: serverTimestamp(),
+                    note: "ডিপিএস কিস্তি আদায় সম্পন্ন"
+                });
+
+                await batch.commit();
+                alert("সফল! ডিপিএস কিস্তি জমা নেওয়া হয়েছে।");
+                location.reload();
+
+            } catch (err) { alert(err.message); btn.disabled = false; }
+        });
+
+        fetchDpsData();
+    </script>
+</body>
+</html>

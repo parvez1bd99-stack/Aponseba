@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - সদস্য ডিজিটাল পাসবই</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f0f4f7; }
+        .loan-dark { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+        .dps-card { background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%); border-bottom: 5px solid #fbbf24; }
+        .detail-row { display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding: 10px 0; }
+        .detail-row:last-child { border-bottom: none; }
+        .section-tag { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: block; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px; }
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .progress-bg { background: rgba(255,255,255,0.1); height: 8px; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; transition: width 1s ease; }
+    </style>
+</head>
+<body class="p-4 md:p-8 pb-20">
+
+    <div class="max-w-md mx-auto animate-fade-in">
+        <!-- ব্র্যান্ডিং ও টাইটেল -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-black italic text-teal-700 tracking-tighter uppercase">আপন</h1>
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1">সদস্য ডিজিটাল পাসবই</p>
+        </div>
+
+        <!-- মেম্বার প্রোফাইল ও সাধারণ সঞ্চয় কার্ড -->
+        <div class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden mb-6 border border-white">
+            <div class="bg-teal-600 p-8 text-white text-center relative">
+                <div class="w-20 h-20 bg-teal-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl border-4 border-teal-400/50 shadow-inner">👤</div>
+                <h2 id="mName" class="text-2xl font-black leading-tight">...</h2>
+                <p id="mId" class="text-[10px] font-mono opacity-70 uppercase tracking-widest mt-1">ID: ...</p>
+                <div class="mt-6 pt-5 border-t border-teal-500/50">
+                    <p class="text-[10px] uppercase font-bold opacity-80 mb-1">মোট সঞ্চয় স্থিতি</p>
+                    <h3 id="mSavings" class="text-4xl font-black tracking-tighter">৳ ০</h3>
+                </div>
+            </div>
+
+            <!-- বিস্তারিত যৌথ তথ্য সেকশন (আবেদনকারী ও জামিনদার) -->
+            <div class="p-8 space-y-6">
+                <div>
+                    <span class="section-tag">আবেদনকারীর তথ্য</span>
+                    <div class="detail-row"><span class="text-xs text-gray-500">👤 নাম:</span><span id="mNameDetail" class="text-xs font-bold text-slate-700">...</span></div>
+                    <div class="detail-row"><span class="text-xs text-gray-500">📞 মোবাইল:</span><span id="mPhone" class="text-xs font-bold text-slate-700">...</span></div>
+                    <div class="detail-row"><span class="text-xs text-gray-500">💳 এনআইডি:</span><span id="mNid" class="text-xs font-bold text-slate-700 font-mono">...</span></div>
+                </div>
+                <div>
+                    <span class="section-tag">স্বামী/স্ত্রীর তথ্য (জামিনদার)</span>
+                    <div class="detail-row"><span class="text-xs text-gray-500">👤 নাম:</span><span id="pName" class="text-xs font-bold text-slate-700">...</span></div>
+                    <div class="detail-row"><span class="text-xs text-gray-500">📞 মোবাইল:</span><span id="pPhone" class="text-xs font-bold text-slate-700">...</span></div>
+                    <div class="detail-row"><span class="text-xs text-gray-500">💳 এনআইডি:</span><span id="pNid" class="text-xs font-bold text-slate-700 font-mono">...</span></div>
+                </div>
+                <div>
+                    <span class="section-tag">স্থায়ী ঠিকানা</span>
+                    <p id="mAddress" class="text-[11px] font-bold text-slate-600 italic leading-relaxed">...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ডিপিএস কার্ড (যদি থাকে) - নতুন যুক্ত হয়েছে -->
+        <div id="dpsCard" class="hidden dps-card p-8 rounded-[2.5rem] shadow-2xl text-white mb-6 relative overflow-hidden">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-amber-400 text-[10px] font-bold uppercase tracking-widest">ডিপিএস সঞ্চয় (DPS)</p>
+                    <h4 id="dpsSchemeType" class="text-xs font-black uppercase text-white">...</h4>
+                </div>
+                <span class="bg-amber-400 text-indigo-900 text-[9px] px-2 py-0.5 rounded font-black uppercase">Active</span>
+            </div>
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <p class="text-gray-400 text-[10px] uppercase font-bold">মোট জমা</p>
+                    <h4 id="dpsTotalDeposited" class="text-4xl font-black text-white tracking-tighter">৳ ০</h4>
+                </div>
+                <div class="text-right">
+                    <p class="text-gray-400 text-[10px] uppercase font-bold">কিস্তি হার</p>
+                    <h4 id="dpsInstAmt" class="text-lg font-black text-amber-400">৳ ০</h4>
+                </div>
+            </div>
+            <div class="progress-bg"><div id="dpsBar" class="progress-fill bg-amber-400" style="width: 0%"></div></div>
+            <p id="dpsMaturityInfo" class="text-[9px] text-indigo-300 font-bold uppercase mt-3 italic tracking-wider">মেয়াদ: ... বছর</p>
+        </div>
+
+        <!-- লোন স্ট্যাটাস কার্ড -->
+        <div id="loanCard" class="hidden loan-dark p-8 rounded-[2.5rem] shadow-2xl text-white mb-8 relative overflow-hidden border-b-4 border-rose-500">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <p class="text-teal-400 text-[10px] font-bold uppercase tracking-widest">লোন স্কিম</p>
+                    <h4 id="loanSchemeType" class="text-xs font-black uppercase text-white">...</h4>
+                </div>
+                <div class="text-right">
+                    <p class="text-gray-400 text-[9px] uppercase font-bold">লোন গ্রহণের তারিখ</p>
+                    <h4 id="disbursedDateText" class="text-xs font-black text-white italic">...</h4>
+                </div>
+            </div>
+            <div class="mb-6 p-4 bg-white/10 rounded-2xl border border-white/10">
+                <p class="text-[9px] text-teal-400 font-black uppercase mb-1">লোন গ্রহণের উদ্দেশ্য:</p>
+                <p id="loanPurposeText" class="text-xs font-bold text-white italic leading-relaxed">...</p>
+            </div>
+            <div class="bg-white/5 p-6 rounded-[2rem] border border-white/10 text-center mb-6">
+                <p class="text-rose-400 text-[11px] uppercase font-bold tracking-widest mb-1">বর্তমানে মোট বাকি লোন</p>
+                <h4 id="remLoan" class="text-4xl font-black text-rose-400 tracking-tighter">৳ ০</h4>
+            </div>
+            <div class="mb-2">
+                <div class="flex justify-between text-[10px] font-bold uppercase mb-2 text-gray-400">
+                    <span id="collectionTimeInfo">...</span>
+                    <span id="instStatus">কিস্তি: ০/০</span>
+                </div>
+                <div class="h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                    <div id="pBar" class="h-full bg-gradient-to-r from-teal-500 to-emerald-400 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- সাম্প্রতিক লেনদেন সেকশন -->
+        <div class="mb-4 flex items-center justify-between px-2">
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">সাম্প্রতিক লেনদেন</h3>
+            <span class="text-[10px] text-teal-600 font-bold uppercase bg-teal-50 px-2 py-0.5 rounded-md">সর্বশেষ ৩টি</span>
+        </div>
+
+        <div id="mTrans" class="space-y-3">
+            <div class="bg-white p-10 rounded-3xl text-center text-gray-300 italic text-xs border border-dashed">তথ্য লোড হচ্ছে...</div>
+        </div>
+
+        <!-- অ্যাকশন বাটন -->
+        <div class="mt-12 text-center space-y-6">
+            <button onclick="location.reload()" class="text-[11px] font-bold text-gray-400 uppercase border-b-2 border-gray-200 pb-1">পেজ রিফ্রেশ করুন</button>
+            <br>
+            <a href="qr-scanner.html" class="inline-flex items-center gap-3 bg-slate-900 text-white px-10 py-4 rounded-3xl font-black text-xs uppercase shadow-2xl active:scale-95 transition">
+                <span>📷</span> নতুন কার্ড স্ক্যান করুন
+            </a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const memberId = urlParams.get('id');
+
+        async function loadDashboard() {
+            if(!memberId) return;
+
+            try {
+                // ১. ইউজার ডাটা (প্রোফাইল ও যৌথ তথ্য)
+                const uSnap = await getDoc(doc(db, "users", memberId));
+                if(uSnap.exists()) {
+                    const user = uSnap.data();
+                    document.getElementById('mName').innerText = user.name || "N/A";
+                    document.getElementById('mId').innerText = "ID: " + memberId.substring(0, 12).toUpperCase();
+                    document.getElementById('mSavings').innerText = "৳ " + (user.totalSavings || 0).toLocaleString('bn-BD');
+                    document.getElementById('mNameDetail').innerText = user.name || "N/A";
+                    document.getElementById('mPhone').innerText = user.phone || "N/A";
+                    document.getElementById('mNid').innerText = user.nid || "N/A";
+                    document.getElementById('pName').innerText = user.partnerName || "N/A";
+                    document.getElementById('pPhone').innerText = user.partnerPhone || "N/A";
+                    document.getElementById('pNid').innerText = user.partnerNid || "N/A";
+                    document.getElementById('mAddress').innerText = user.address || "N/A";
+                }
+
+                // ২. ডিপিএস ডাটা লোড
+                const dpsQ = query(collection(db, "dps_accounts"), where("customerId", "==", memberId), where("status", "==", "Active"));
+                const dpsSnap = await getDocs(dpsQ);
+                if(!dpsSnap.empty) {
+                    const dps = dpsSnap.docs[0].data();
+                    document.getElementById('dpsCard').classList.remove('hidden');
+                    document.getElementById('dpsSchemeType').innerText = `${dps.scheme} DPS Plan`;
+                    document.getElementById('dpsTotalDeposited').innerText = "৳ " + (dps.totalDeposited || 0).toLocaleString('bn-BD');
+                    document.getElementById('dpsInstAmt').innerText = "৳ " + dps.installmentAmount;
+                    const dProgress = Math.min(Math.round((dps.paidInstallments / (dps.durationYears * 12)) * 100), 100);
+                    document.getElementById('dpsBar').style.width = dProgress + "%";
+                    document.getElementById('dpsMaturityInfo').innerText = `মেয়াদ: ${dps.durationYears} বছর (জমা: ${dps.paidInstallments} মাস)`;
+                }
+
+                // ৩. লোন ডাটা লোড
+                const qL = query(collection(db, "loans"), where("customerId", "==", memberId), where("status", "==", "Active"));
+                const lSnap = await getDocs(qL);
+                if(!lSnap.empty) {
+                    const loan = lSnap.docs[0].data();
+                    const total = Number(loan.totalAmount || 0);
+                    const remaining = Number(loan.remainingAmount || 0);
+                    const progress = total > 0 ? Math.round(((total - remaining) / total) * 100) : 0;
+                    document.getElementById('loanCard').classList.remove('hidden');
+                    document.getElementById('remLoan').innerText = "৳ " + remaining.toLocaleString('bn-BD');
+                    document.getElementById('pBar').style.width = progress + "%";
+                    document.getElementById('instStatus').innerText = `কিস্তি পরিশোধিত: ${loan.paidInstallments || 0} / ${loan.totalInstallments || 0}`;
+                    document.getElementById('loanPurposeText').innerText = loan.note || "বিবরণ দেওয়া হয়নি";
+                    if(loan.disbursedDate) document.getElementById('disbursedDateText').innerText = loan.disbursedDate.toDate().toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
+                    const scheme = loan.loanScheme || 'Weekly';
+                    document.getElementById('loanSchemeType').innerText = scheme + ' Scheme';
+                    document.getElementById('collectionTimeInfo').innerText = scheme === 'Weekly' ? `প্রতি ${loan.collectionDay}` : `প্রতি মাসের ${loan.collectionDate} তারিখ`;
+                }
+
+                // ৪. লেনদেন সর্টিং (নতুন আগে)
+                const qT = query(collection(db, "transactions"), where("customerId", "==", memberId));
+                const tSnap = await getDocs(qT);
+                const tDiv = document.getElementById('mTrans');
+                let transList = [];
+                tSnap.forEach(d => transList.push(d.data()));
+                transList.sort((a, b) => (b.date?.toDate().getTime() || 0) - (a.date?.toDate().getTime() || 0));
+
+                const latest = transList.slice(0, 3);
+                tDiv.innerHTML = "";
+                if(latest.length === 0) tDiv.innerHTML = '<div class="bg-white p-10 rounded-3xl text-center text-gray-400 text-xs italic border">কোনো রেকর্ড নেই</div>';
+
+                latest.forEach(data => {
+                    const formattedDate = data.date ? data.date.toDate().toLocaleDateString('bn-BD', {day: 'numeric', month: 'long'}) : "---";
+                    const isPlus = data.type.includes('Deposit') || data.type.includes('Payment') || data.type.includes('DPS');
+                    let icon = isPlus ? '💰' : '📤';
+                    if(data.type.includes('DPS')) icon = '🏦';
+                    
+                    tDiv.innerHTML += `
+                        <div class="bg-white p-5 rounded-3xl shadow-sm flex justify-between items-center border border-white">
+                            <div class="flex items-center gap-3">
+                                <div class="w-11 h-11 rounded-2xl ${isPlus ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'} flex items-center justify-center text-lg shadow-sm border border-white">${icon}</div>
+                                <div><p class="text-[13px] font-black text-slate-700 leading-none mb-1">${data.type}</p><p class="text-[10px] text-gray-400 font-bold uppercase">${formattedDate}</p></div>
+                            </div>
+                            <p class="text-base font-black ${isPlus ? 'text-green-600' : 'text-red-500'}">৳ ${data.amount.toLocaleString('bn-BD')}</p>
+                        </div>`;
+                });
+
+            } catch (err) { console.error(err); }
+        }
+        loadDashboard();
+    </script>
+</body>
+</html>

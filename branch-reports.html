@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপন - শাখা রিপোর্ট</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f8fafc; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: white; padding: 0; }
+            .print-container { width: 100%; border: none; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto print-container">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border no-print">
+            <div>
+                <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase">শাখা হিসাব রিপোর্ট</h1>
+                <p class="text-xs text-gray-500 italic">শাখার আয়, ব্যয় এবং ক্যাশ স্ট্যাটাস যাচাই করুন</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="window.print()" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg font-bold text-xs hover:bg-gray-200">প্রিন্ট / PDF</button>
+                <a href="manager-dashboard.html" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-indigo-700">ফিরে যান</a>
+            </div>
+        </div>
+
+        <!-- তারিখ ফিল্টার (no-print) -->
+        <div class="bg-white p-6 rounded-2xl shadow-md mb-8 border border-indigo-100 no-print">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">শুরুর তারিখ</label>
+                    <input type="date" id="startDate" class="w-full border p-2 rounded-xl outline-indigo-500 font-bold text-sm">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">শেষ তারিখ</label>
+                    <input type="date" id="endDate" class="w-full border p-2 rounded-xl outline-indigo-500 font-bold text-sm">
+                </div>
+                <button onclick="generateReport()" class="bg-indigo-600 text-white py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-indigo-700 transition uppercase">রিপোর্ট দেখুন</button>
+            </div>
+        </div>
+
+        <!-- প্রিন্ট হেডার (শুধুমাত্র প্রিন্টে দেখাবে) -->
+        <div class="hidden print:block text-center mb-8 border-b pb-4">
+            <h1 class="text-3xl font-bold italic text-indigo-800 uppercase">আপন মাইক্রোফিন্যান্স</h1>
+            <p id="printBranchName" class="text-lg font-bold">শাখা রিপোর্ট</p>
+            <p id="printDateRange" class="text-xs text-gray-500"></p>
+        </div>
+
+        <!-- ক্যাশ সামারি কার্ডস -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-green-500">
+                <p class="text-[10px] font-bold text-gray-400 uppercase">মোট আদায় (In)</p>
+                <h2 id="totalIn" class="text-xl font-black text-slate-800 mt-1">৳ ০</h2>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-red-500">
+                <p class="text-[10px] font-bold text-gray-400 uppercase">অফিস খরচ (Out)</p>
+                <h2 id="totalOut" class="text-xl font-black text-slate-800 mt-1">৳ ০</h2>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-orange-500">
+                <p class="text-[10px] font-bold text-gray-400 uppercase">সঞ্চয় উত্তোলন</p>
+                <h2 id="totalWithdraw" class="text-xl font-black text-slate-800 mt-1">৳ ০</h2>
+            </div>
+            <div class="bg-slate-900 p-5 rounded-2xl shadow-lg text-white">
+                <p class="text-[10px] font-bold uppercase opacity-70 text-emerald-400">নিট ক্যাশ (Balance)</p>
+                <h2 id="netCash" class="text-xl font-black mt-1">৳ ০</h2>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- আয় বিবরণী -->
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div class="p-4 bg-green-50 border-b font-bold text-green-800 text-sm">আদায় ও সঞ্চয় বিবরণী</div>
+                <div class="p-4">
+                    <table class="w-full text-left text-xs">
+                        <thead><tr class="text-gray-400 border-b"><th class="pb-2">বিবরণ</th><th class="pb-2 text-right">পরিমাণ</th></tr></thead>
+                        <tbody id="incomeList" class="divide-y font-medium text-slate-700">
+                            <!-- জাভাস্ক্রিপ্ট দিয়ে আসবে -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ব্যয় বিবরণী -->
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div class="p-4 bg-red-50 border-b font-bold text-red-800 text-sm">খরচ ও উত্তোলন বিবরণী</div>
+                <div class="p-4">
+                    <table class="w-full text-left text-xs">
+                        <thead><tr class="text-gray-400 border-b"><th class="pb-2">বিবরণ</th><th class="pb-2 text-right">পরিমাণ</th></tr></thead>
+                        <tbody id="expenseList" class="divide-y font-medium text-slate-700">
+                            <!-- জাভাস্ক্রিপ্ট দিয়ে আসবে -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, checkAccess } from './firebase-config.js';
+        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        checkAccess('manager');
+        const branchId = localStorage.getItem('branchId');
+
+        // ডিফল্টভাবে আজকের তারিখ সেট করা
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').value = today;
+        document.getElementById('endDate').value = today;
+
+        async function generateReport() {
+            const startStr = document.getElementById('startDate').value;
+            const endStr = document.getElementById('endDate').value;
+            
+            if(!startStr || !endStr) return alert("তারিখ নির্বাচন করুন!");
+
+            const start = new Date(startStr); start.setHours(0,0,0,0);
+            const end = new Date(endStr); end.setHours(23,59,59,999);
+
+            document.getElementById('printDateRange').innerText = `সময়কাল: ${startStr} হতে ${endStr}`;
+
+            try {
+                // ১. ইনডেক্স ঝামেলা এড়াতে শুধু branchId দিয়ে সব ডাটা একবারেই আনা
+                const tQ = query(collection(db, "transactions"), where("branchId", "==", branchId));
+                const tSnap = await getDocs(tQ);
+
+                const eQ = query(collection(db, "expenses"), where("branchId", "==", branchId));
+                const eSnap = await getDocs(eQ);
+
+                let totalLoanColl = 0, totalSavDep = 0, totalSavWith = 0, totalOffExp = 0;
+                const incList = document.getElementById('incomeList');
+                const expList = document.getElementById('expenseList');
+                incList.innerHTML = ""; expList.innerHTML = "";
+
+                // লেনদেন প্রসেস (Client-side Date Filtering)
+                tSnap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.date) {
+                        const tTime = data.date.toDate().getTime();
+                        // তারিখ রেঞ্জের মধ্যে আছে কিনা চেক
+                        if(tTime >= start.getTime() && tTime <= end.getTime()) {
+                            if(data.type === "Loan Payment") {
+                                totalLoanColl += Number(data.amount || 0);
+                                incList.innerHTML += `<tr><td class="py-3">লোন কিস্তি আদায়</td><td class="py-3 text-right font-black text-green-600">৳ ${data.amount}</td></tr>`;
+                            } else if(data.type === "Savings Deposit") {
+                                totalSavDep += Number(data.amount || 0);
+                                incList.innerHTML += `<tr><td class="py-3">সঞ্চয় জমা</td><td class="py-3 text-right font-black text-blue-600">৳ ${data.amount}</td></tr>`;
+                            } else if(data.type === "Savings Withdrawal") {
+                                totalSavWith += Number(data.amount || 0);
+                                expList.innerHTML += `<tr><td class="py-3">সঞ্চয় উত্তোলন</td><td class="py-3 text-right font-black text-orange-600">৳ ${data.amount}</td></tr>`;
+                            }
+                        }
+                    }
+                });
+
+                // অফিস খরচ প্রসেস (Client-side Date Filtering)
+                eSnap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.date) {
+                        const eTime = data.date.toDate().getTime();
+                        if(eTime >= start.getTime() && eTime <= end.getTime()) {
+                            totalOffExp += Number(data.amount || 0);
+                            expList.innerHTML += `<tr><td class="py-3">${data.category} (অফিস খরচ)</td><td class="py-3 text-right font-black text-red-600">৳ ${data.amount}</td></tr>`;
+                        }
+                    }
+                });
+
+                // সামারি কার্ড আপডেট
+                const totalIn = totalLoanColl + totalSavDep;
+                const totalOut = totalOffExp + totalSavWith;
+
+                document.getElementById('totalIn').innerText = `৳ ${totalIn.toLocaleString('bn-BD')}`;
+                document.getElementById('totalOut').innerText = `৳ ${totalOffExp.toLocaleString('bn-BD')}`;
+                document.getElementById('totalWithdraw').innerText = `৳ ${totalSavWith.toLocaleString('bn-BD')}`;
+                document.getElementById('netCash').innerText = `৳ ${(totalIn - totalOut).toLocaleString('bn-BD')}`;
+
+                if(totalIn === 0 && totalOut === 0) {
+                    const emptyRow = "<tr><td colspan='2' class='p-8 text-center text-gray-400 italic'>নির্বাচিত সময়ে কোনো রেকর্ড নেই</td></tr>";
+                    incList.innerHTML = emptyRow;
+                    expList.innerHTML = emptyRow;
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert("রিপোর্ট তৈরি করতে সমস্যা হয়েছে। ডাটাবেস চেক করুন।");
+            }
+        }
+
+        window.generateReport = generateReport;
+        generateReport(); // লোড হওয়ার সাথে সাথে আজকের রিপোর্ট দেখাবে
+    </script>
+</body>
+</html>
