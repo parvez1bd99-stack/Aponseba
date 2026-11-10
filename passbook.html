@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#047857">
+  <title>ডিজিটাল লোন পাসবুক ও আইডি কার্ড</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- QR Code জেনারেটর লাইব্রেরি -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    html { -webkit-text-size-adjust: 100%; }
+    body { font-family: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); }
+    input, select, textarea { font-size: 16px; } /* আইফোনে ফোকাস করলে জুম হওয়া বন্ধ */
+    button, a.btn { touch-action: manipulation; }
+    .no-scrollbar { scrollbar-width: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    @media (max-width: 767px) {
+      .rtable thead { display: none; }
+      .rtable, .rtable tbody, .rtable tr, .rtable td { display: block; width: 100%; }
+      .rtable tr { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 10px 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+      .rtable td { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 7px 0 !important; text-align: right; }
+      .rtable td::before { content: attr(data-label); color: #6b7280; font-size: 12px; text-align: left; flex-shrink: 0; }
+      .rtable td.title { display: block; text-align: left; font-size: 17px; font-weight: 700; padding-bottom: 9px !important; margin-bottom: 4px; border-bottom: 1px dashed #e5e7eb; }
+      .rtable td.title::before, .rtable td.act::before, .rtable td.full::before { display: none; }
+      .rtable td.act { display: block; padding-top: 10px !important; }
+      .rtable td.act > * { width: 100%; text-align: center; }
+      .rtable td.full { display: block; text-align: center; }
+    }
+  </style>
+  <style>
+    #qrcode img, #qrcode canvas { max-width: 100%; height: auto; }
+    @media print {
+      body { background: white !important; padding: 0 !important; }
+      .no-print { display: none !important; }
+      .print-border { border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-[100dvh] p-3 sm:p-6 flex flex-col items-center" style="padding-top: max(0.75rem, env(safe-area-inset-top))">
+
+  <div class="max-w-xl w-full space-y-4 sm:space-y-6">
+
+    <!-- অ্যাকশন বাটনসমূহ (প্রিন্ট করার সময় এগুলো দেখাবে না) -->
+    <div class="no-print flex justify-between items-center gap-2">
+      <button onclick="window.history.back()" class="text-sm font-semibold text-gray-700 bg-white border active:bg-gray-100 px-4 py-2.5 rounded-xl shadow-sm">
+        ← ফিরে যান
+      </button>
+      <button onclick="window.print()" class="bg-emerald-600 active:bg-emerald-800 hover:bg-emerald-700 text-white text-sm px-4 py-2.5 rounded-xl font-semibold shadow transition flex items-center gap-1.5">
+        <span>🖨️</span> প্রিন্ট করুন
+      </button>
+    </div>
+
+    <!-- ডিজিটাল স্মার্ট আইডি কার্ড ও পাসবুক কনটেইনার -->
+    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200 print-border">
+      
+      <!-- কার্ডের উপরের হেডার -->
+      <div class="bg-gradient-to-r from-emerald-700 to-teal-800 p-5 sm:p-6 text-white">
+        <div class="flex justify-between items-start gap-3">
+          <div class="min-w-0">
+            <h1 class="text-lg sm:text-xl font-bold tracking-tight">ক্ষুদ্র ঋণ সেবা সংস্থা</h1>
+            <p class="text-xs text-emerald-200 mt-0.5">ডিজিটাল কাস্টমার স্টেটমেন্ট ও স্মার্ট পাসবুক</p>
+          </div>
+          <span id="badgeStatus" class="shrink-0 bg-white/20 text-white text-xs px-3 py-1 rounded-full font-semibold">
+            লোড হচ্ছে...
+          </span>
+        </div>
+
+        <div class="mt-5 flex justify-between items-end gap-3">
+          <div class="min-w-0 flex items-end gap-3">
+            <img id="custPhotoImg" alt="" class="hidden w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-white/60 shrink-0">
+            <div class="min-w-0">
+            <p class="text-[11px] text-emerald-200">গ্রাহকের নাম</p>
+            <h2 id="custName" class="text-xl sm:text-2xl font-black mt-0.5 break-words">লোড হচ্ছে...</h2>
+            <p id="custPhone" class="text-xs opacity-90 mt-1">মোবাইল: ...</p>
+            <p id="custNid" class="text-xs opacity-80 mt-0.5 break-all">NID: ...</p>
+            </div>
+          </div>
+
+          <!-- কিউআর কোড বক্স -->
+          <div class="bg-white p-2 rounded-2xl shadow-md text-center shrink-0">
+            <div id="qrcode"></div>
+            <p class="text-[10px] text-gray-500 font-bold mt-1">স্ক্যান করুন</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ব্যালেন্স ও আর্থিক বিবরণী বক্স -->
+      <div class="p-4 sm:p-6 space-y-5">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+          <div class="bg-slate-50 border border-slate-100 rounded-2xl p-3 text-center">
+            <p class="text-[11px] font-semibold text-gray-500">মোট ঋণ</p>
+            <p id="totalPayable" class="text-base font-bold text-gray-800 mt-1">0 ৳</p>
+          </div>
+          <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 text-center">
+            <p class="text-[11px] font-semibold text-gray-500">পরিশোধিত</p>
+            <p id="paidAmount" class="text-base font-bold text-emerald-600 mt-1">0 ৳</p>
+          </div>
+          <div class="bg-rose-50 border border-rose-100 rounded-2xl p-3 text-center">
+            <p class="text-[11px] font-semibold text-gray-500">বর্তমান বাকি</p>
+            <p id="remainingAmount" class="text-base font-bold text-rose-600 mt-1">0 ৳</p>
+          </div>
+          <div class="bg-blue-50 border border-blue-100 rounded-2xl p-3 text-center">
+            <p class="text-[11px] font-semibold text-gray-500">প্রতি কিস্তি</p>
+            <p id="perInstallment" class="text-base font-bold text-blue-600 mt-1">0 ৳</p>
+          </div>
+        </div>
+
+        <!-- সঞ্চয় (ভর্তি জমা সহ) -->
+        <div class="bg-teal-50 border border-teal-100 rounded-2xl p-3.5 flex justify-between items-center gap-3">
+          <div>
+            <p class="text-[11px] font-semibold text-gray-600">জমানো সঞ্চয় (ফেরতযোগ্য)</p>
+            <p id="admissionInfo" class="text-[11px] text-gray-400 mt-0.5">ভর্তি জমা সহ</p>
+          </div>
+          <div class="text-right">
+            <p id="savingsBalance" class="text-lg font-bold text-teal-700">0 ৳</p>
+            <p id="savingsStatus" class="text-[11px] text-gray-500"></p>
+          </div>
+        </div>
+
+        <!-- পরবর্তী কিস্তির তারিখ তথ্য -->
+        <div id="nextDueDateContainer" class="bg-blue-50 border border-blue-100 p-3.5 rounded-xl flex flex-wrap justify-between items-center gap-1 text-sm">
+          <span class="text-blue-700 font-medium">পরবর্তী কিস্তির নির্ধারিত তারিখ:</span>
+          <b id="nextDueDate" class="text-blue-900 font-bold">-</b>
+        </div>
+
+        <!-- কিস্তি পরিশোধের রিয়েল-টাইম হিস্ট্রি (লেনদেনের প্রমাণ) -->
+        <div>
+          <div class="flex items-center justify-between mb-3 gap-2">
+            <h3 class="text-sm font-bold text-gray-800">পরিশোধের বিস্তারিত বিবরণী</h3>
+            <span class="text-[11px] text-emerald-600 font-semibold bg-emerald-50 px-2.5 py-1 rounded-full shrink-0">
+              লাইভ আপডেট
+            </span>
+          </div>
+
+          <div class="border border-gray-200 rounded-xl overflow-hidden">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-gray-50 text-gray-600 border-b">
+                <tr>
+                  <th class="p-2.5">তারিখ</th>
+                  <th class="p-2.5">বিবরণ / কালেকশন</th>
+                  <th class="p-2.5 text-right">আদায় (টাকা)</th>
+                </tr>
+              </thead>
+              <tbody id="historyBody" class="divide-y divide-gray-100">
+                <tr>
+                  <td colspan="3" class="p-4 text-center text-gray-400">ইতিহাস লোড হচ্ছে...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ফুটার বার্তা -->
+        <p class="text-center text-xs text-gray-400 leading-relaxed">
+          এই কার্ডে থাকা কিউআর কোডটি যেকোনো স্মার্টফোনের ক্যামেরা দিয়ে স্ক্যান করলেই লাইভ হিসাব দেখতে পাবেন। কিস্তি পরিশোধের সাথে সাথে এখানে যাচাই করে নিন।
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- স্ক্রিপ্ট সেকশন -->
+  <script type="module">
+    import { db, doc, onSnapshot, collection, query, where } from "./firebase-config.js";
+
+    // তারিখ ইংরেজিতে দেখানো (যেমন: 10 Nov 2026)
+    const fmtDate = (d) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const fmtDateStr = (str) => {
+      if (!str) return null;
+      const d = new Date(str + "T00:00:00");
+      return isNaN(d) ? str : fmtDate(d);
+    };
+
+    // URL থেকে Loan ID নেওয়া (যেমন: passbook.html?id=LOAN_ID)
+    const urlParams = new URLSearchParams(window.location.search);
+    const loanId = urlParams.get('id');
+
+    if (!loanId) {
+      alert("কোনো লোন আইডি পাওয়া যায়নি!");
+      document.getElementById("custName").innerText = "তথ্য পাওয়া যায়নি";
+    } else {
+
+      // ১. লোনের ব্যালেন্স ও মূল তথ্যের লাইভ আপডেট
+      onSnapshot(doc(db, "loans", loanId), (docSnap) => {
+        if (!docSnap.exists()) {
+          alert("ডাটাবেজে এই লোনের কোনো রেকর্ড নেই!");
+          return;
+        }
+
+        const data = docSnap.data();
+
+        document.getElementById("custName").innerText = data.name || "গ্রাহক";
+        const photoEl = document.getElementById("custPhotoImg");
+        if (data.photo) { photoEl.src = data.photo; photoEl.classList.remove("hidden"); }
+        document.getElementById("custPhone").innerText = "মোবাইল: " + (data.phone || "-");
+        document.getElementById("custNid").innerText = "NID: " + (data.nid || "-");
+        document.getElementById("totalPayable").innerText = (data.totalPayable || 0).toLocaleString('en-IN') + " ৳";
+        document.getElementById("paidAmount").innerText = (data.paidAmount || 0).toLocaleString('en-IN') + " ৳";
+        document.getElementById("remainingAmount").innerText = (data.remainingAmount || 0).toLocaleString('en-IN') + " ৳";
+        document.getElementById("perInstallment").innerText = (data.perInstallment || 0).toLocaleString('en-IN') + " ৳";
+        document.getElementById("nextDueDate").innerText = fmtDateStr(data.nextDueDate) || "পরিশোধিত";
+
+        // সঞ্চয় ও ভর্তি জমা
+        document.getElementById("admissionInfo").innerText = "ভর্তি জমা: " + Number(data.admissionDeposit || 0).toLocaleString('en-IN') + " ৳ সহ";
+        const sbEl = document.getElementById("savingsBalance");
+        const ssEl = document.getElementById("savingsStatus");
+        if (data.savingsRefunded) {
+          sbEl.innerText = Number(data.savingsRefundAmount || 0).toLocaleString('en-IN') + " ৳";
+          ssEl.innerText = "ফেরত দেওয়া হয়েছে";
+        } else {
+          sbEl.innerText = Number(data.savingsBalance || 0).toLocaleString('en-IN') + " ৳";
+          ssEl.innerText = data.status === "completed" ? "ফেরতের অপেক্ষায়" : "লোন শোধ হলে ফেরত";
+        }
+
+        // স্ট্যাটাস ব্যাজ আপডেট
+        const badge = document.getElementById("badgeStatus");
+        if (data.status === "completed") {
+          badge.innerText = "পরিশোধিত";
+          badge.className = "shrink-0 bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full font-semibold";
+          document.getElementById("nextDueDateContainer").classList.add("hidden");
+        } else if (data.status === "active") {
+          badge.innerText = "সক্রিয় লোন";
+          badge.className = "shrink-0 bg-emerald-100 text-emerald-900 text-xs px-3 py-1 rounded-full font-semibold";
+        } else {
+          badge.innerText = "অপেক্ষমাণ";
+          badge.className = "shrink-0 bg-amber-100 text-amber-900 text-xs px-3 py-1 rounded-full font-semibold";
+        }
+
+        // ২. কিউআর কোড তৈরি (বর্তমান পেজের সম্পূর্ণ URL লিংক দিয়ে)
+        document.getElementById("qrcode").innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), {
+          text: window.location.href,
+          width: 72,
+          height: 72,
+          colorDark : "#0f172a",
+          colorLight : "#ffffff",
+          correctLevel : QRCode.CorrectLevel.M
+        });
+      });
+
+      // ৩. এই লোনের যাবতীয় কিস্তি আদায়ের ইতিহাস (হিসাবের স্বচ্ছতার জন্য)
+      const historyQuery = query(collection(db, "collections"), where("loanId", "==", loanId));
+      
+      onSnapshot(historyQuery, (snapshot) => {
+        const tbody = document.getElementById("historyBody");
+        tbody.innerHTML = "";
+
+        if (snapshot.empty) {
+          tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-400">এখনো কোনো কিস্তি জমা হয়নি।</td></tr>`;
+          return;
+        }
+
+        // লেনদেনগুলোকে ক্রমানুসারে সাজানো
+        const historyList = [];
+        snapshot.forEach((colDoc) => {
+          historyList.push(colDoc.data());
+        });
+
+        historyList.sort((a, b) => {
+          const tA = a.timestamp?.seconds || 0;
+          const tB = b.timestamp?.seconds || 0;
+          return tB - tA; // নতুন লেনদেন উপরে থাকবে
+        });
+
+        historyList.forEach((item) => {
+          let dateStr = "সাম্প্রতিক";
+          if (item.timestamp && item.timestamp.toDate) {
+            dateStr = fmtDate(item.timestamp.toDate());
+          }
+
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-gray-50 transition";
+          tr.innerHTML = `
+            <td class="p-2.5 text-gray-600 font-medium whitespace-nowrap align-top">${dateStr}</td>
+            <td class="p-2.5 text-gray-700 align-top">
+              <span class="font-semibold">${item.note || 'কিস্তি জমা'}</span>
+              ${item.savingsAmount ? `<span class="text-[11px] text-teal-700 block">+ সঞ্চয় জমা ${Number(item.savingsAmount).toLocaleString('en-IN')} ৳</span>` : ''}
+              <span class="text-[10px] text-gray-400 block">${item.collectedByName || 'অফিসার'} কর্তৃক গৃহীত</span>
+            </td>
+            <td class="p-2.5 text-right font-black text-emerald-700 whitespace-nowrap align-top">${(item.amount || 0).toLocaleString('en-IN')} ৳</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+
+    }
+  </script>
+</body>
+</html>

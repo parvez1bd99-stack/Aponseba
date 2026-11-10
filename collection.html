@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>কিস্তি আদায় ও দৈনিক শিডিউল</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    html { -webkit-text-size-adjust: 100%; }
+    body { font-family: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); }
+    input, select, textarea { font-size: 16px; } /* আইফোনে ফোকাস করলে জুম হওয়া বন্ধ */
+    button, a.btn { touch-action: manipulation; }
+    .no-scrollbar { scrollbar-width: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    @media (max-width: 767px) {
+      .rtable thead { display: none; }
+      .rtable, .rtable tbody, .rtable tr, .rtable td { display: block; width: 100%; }
+      .rtable tr { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 10px 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+      .rtable td { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 7px 0 !important; text-align: right; }
+      .rtable td::before { content: attr(data-label); color: #6b7280; font-size: 12px; text-align: left; flex-shrink: 0; }
+      .rtable td.title { display: block; text-align: left; font-size: 17px; font-weight: 700; padding-bottom: 9px !important; margin-bottom: 4px; border-bottom: 1px dashed #e5e7eb; }
+      .rtable td.title::before, .rtable td.act::before, .rtable td.full::before { display: none; }
+      .rtable td.act { display: block; padding-top: 10px !important; }
+      .rtable td.act > * { width: 100%; text-align: center; }
+      .rtable td.full { display: block; text-align: center; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-[100dvh]">
+
+  <nav class="bg-white shadow-sm border-b sticky top-0 z-40" style="padding-top: env(safe-area-inset-top)">
+    <div class="px-4 py-3 flex justify-between items-center gap-3">
+      <div class="min-w-0">
+        <h1 class="text-lg sm:text-xl font-bold text-gray-800 truncate">কিস্তি আদায় প্যানেল</h1>
+        <p class="text-xs text-gray-500 truncate">কালেক্টর: <span id="collectorName" class="font-semibold text-emerald-600">...</span></p>
+      </div>
+      <button id="logoutBtn" class="shrink-0 text-sm bg-rose-50 active:bg-rose-200 hover:bg-rose-100 text-rose-600 px-4 py-2.5 rounded-xl font-medium">লগআউট</button>
+    </div>
+    <div class="px-4 pb-3 flex gap-2 overflow-x-auto no-scrollbar">
+      <button onclick="window.history.back()" class="shrink-0 text-sm bg-gray-100 active:bg-gray-300 px-4 py-2.5 rounded-xl text-gray-700 font-medium">← ফিরে যান</button>
+      <a href="defaulters.html" class="shrink-0 text-sm bg-rose-50 text-rose-600 hover:bg-rose-100 px-4 py-2.5 rounded-xl font-medium">
+        বকেয়া / খেলাপী তালিকা ⚠️
+      </a>
+    </div>
+  </nav>
+
+  <div class="max-w-5xl mx-auto p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
+
+    <!-- তারিখ নির্বাচন ও শিডিউল বার -->
+    <div class="bg-white rounded-2xl shadow-sm border p-4 md:p-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+      <div>
+        <h2 class="text-base md:text-lg font-bold text-gray-800">কিস্তি আদায়ের নির্ধারিত তালিকা</h2>
+        <p class="text-xs text-gray-500">তারিখ পরিবর্তন করে যেকোনো দিনের শিডিউল দেখতে পারেন</p>
+      </div>
+
+      <div class="flex flex-col gap-1 w-full sm:w-auto">
+        <label for="scheduleDate" class="text-xs font-semibold text-gray-600">তারিখ নির্বাচন</label>
+        <input type="date" id="scheduleDate" class="w-full border rounded-xl px-3 py-3 font-semibold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+      </div>
+    </div>
+
+    <!-- নির্বাচিত তারিখের কিস্তি শিডিউল তালিকা -->
+    <div class="md:bg-white md:rounded-2xl md:shadow-sm md:border md:p-6">
+      <div class="flex justify-between items-center mb-3 md:mb-4 md:pb-2 md:border-b px-1 md:px-0">
+        <h3 class="text-sm font-bold text-gray-800" id="tableHeaderTitle">আজকের কিস্তির তালিকা</h3>
+        <span id="dueTotalCount" class="text-xs bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full">০ জন</span>
+      </div>
+
+      <table class="rtable w-full text-left text-sm">
+        <thead class="bg-gray-50 text-gray-600 border-b">
+          <tr>
+            <th class="p-3">গ্রাহকের নাম</th>
+            <th class="p-3">মোবাইল</th>
+            <th class="p-3">বর্তমান বাকি</th>
+            <th class="p-3">কিস্তির পরিমাণ</th>
+            <th class="p-3 text-center">অ্যাকশন</th>
+          </tr>
+        </thead>
+        <tbody id="scheduleTableBody" class="md:divide-y md:divide-gray-100">
+          <tr><td colspan="5" class="full p-4 text-center text-gray-400">লোড হচ্ছে...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- টাকা আদায়ের পপ-আপ মডাল (মোবাইলে নিচ থেকে ওঠে) -->
+  <div id="collectModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4 z-50">
+    <div class="bg-white max-w-md w-full max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:rounded-2xl shadow-2xl border" style="padding-bottom: env(safe-area-inset-bottom)">
+      <div class="bg-emerald-600 px-5 py-4 text-white flex justify-between items-center sticky top-0">
+        <h3 class="font-bold text-base" id="modalCustName">কিস্তি গ্রহণ</h3>
+        <button onclick="closeModal()" aria-label="বন্ধ করুন" class="text-white text-3xl leading-none w-10 h-10 flex items-center justify-center -mr-2">&times;</button>
+      </div>
+      <form id="modalPayForm" class="p-5 space-y-4">
+        <div class="bg-gray-50 p-3.5 rounded-xl border text-sm space-y-1.5">
+          <div class="flex justify-between"><span>বর্তমান বকেয়া:</span> <b id="modalRemaining" class="text-rose-600">০ ৳</b></div>
+          <div class="flex justify-between"><span>নির্ধারিত কিস্তি:</span> <b id="modalPerInst" class="text-blue-600">০ ৳</b></div>
+          <div class="flex justify-between"><span>এ পর্যন্ত জমানো সঞ্চয়:</span> <b id="modalSavings" class="text-teal-700">০ ৳</b></div>
+        </div>
+
+        <div>
+          <label for="modalPayAmount" class="block text-xs font-semibold text-gray-600 mb-1">আদায়কৃত টাকা</label>
+          <input type="number" id="modalPayAmount" required min="1" inputmode="numeric" class="w-full border rounded-xl px-3.5 py-3 font-bold text-emerald-700 text-xl outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <div>
+          <label for="modalSavingsAmount" class="block text-xs font-semibold text-gray-600 mb-1">সঞ্চয় জমা (ঐচ্ছিক) — ফেরতযোগ্য</label>
+          <input type="number" id="modalSavingsAmount" min="0" value="100" inputmode="numeric" class="w-full border rounded-xl px-3.5 py-3 font-bold text-teal-700 text-lg outline-none focus:ring-2 focus:ring-teal-500">
+        </div>
+
+        <div class="flex justify-between items-center bg-emerald-50 border border-emerald-100 rounded-xl p-3.5">
+          <span class="text-sm text-emerald-800 font-medium">মোট নিতে হবে</span>
+          <b id="modalTotal" class="text-emerald-700 text-xl">০ ৳</b>
+        </div>
+
+        <div>
+          <label for="modalPayNote" class="block text-xs font-semibold text-gray-600 mb-1">মন্তব্য</label>
+          <input type="text" id="modalPayNote" placeholder="নিয়মিত কিস্তি আদায়" class="w-full border rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <button type="submit" id="modalSubmitBtn" class="w-full bg-emerald-600 active:bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-base py-3.5 rounded-xl shadow disabled:opacity-60">
+          জমা নিশ্চিত করুন
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { db, checkAccess, handleLogout, collection, query, where, onSnapshot, doc, runTransaction, serverTimestamp } from "./firebase-config.js";
+
+    checkAccess();
+    document.getElementById("collectorName").innerText = localStorage.getItem("userName") || "অফিসার";
+    document.getElementById("logoutBtn").addEventListener("click", handleLogout);
+
+    const datePicker = document.getElementById("scheduleDate");
+    const todayStr = new Date().toISOString().split('T')[0];
+    datePicker.value = todayStr; // ডিফল্ট আজকের তারিখ
+
+    let currentScheduleLoans = [];
+    let selectedLoanForPay = null;
+
+    // পরবর্তী কিস্তির তারিখ বের করার ফাংশন
+    function getNextDate(currentDateStr, frequency) {
+      const d = new Date(currentDateStr);
+      if (frequency === 'daily') d.setDate(d.getDate() + 1);
+      else if (frequency === 'monthly') d.setMonth(d.getMonth() + 1);
+      else d.setDate(d.getDate() + 7); // weekly default
+      return d.toISOString().split('T')[0];
+    }
+
+    // তালিকা লোড ফাংশন
+    function loadSchedule(dateStr) {
+      document.getElementById("tableHeaderTitle").innerText = `${dateStr === todayStr ? 'আজকের' : dateStr} কিস্তির আদায় তালিকা`;
+
+      // নির্বাচিত তারিখ ও সক্রিয় লোন কুয়েরি
+      const q = query(
+        collection(db, "loans"),
+        where("status", "==", "active"),
+        where("nextDueDate", "==", dateStr)
+      );
+
+      onSnapshot(q, (snapshot) => {
+        const tbody = document.getElementById("scheduleTableBody");
+        tbody.innerHTML = "";
+        currentScheduleLoans = [];
+
+        document.getElementById("dueTotalCount").innerText = `${snapshot.size} জন`;
+
+        if (snapshot.empty) {
+          tbody.innerHTML = `<tr><td colspan="5" class="full p-6 text-center text-gray-400">এই তারিখে কোনো কিস্তির শিডিউল নেই।</td></tr>`;
+          return;
+        }
+
+        snapshot.forEach((docSnap) => {
+          const item = { id: docSnap.id, ...docSnap.data() };
+          currentScheduleLoans.push(item);
+
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-gray-50";
+          tr.innerHTML = `
+            <td class="title p-3 font-semibold text-gray-800">${item.name}</td>
+            <td data-label="মোবাইল" class="p-3 text-gray-600"><a href="tel:${item.phone}" class="underline decoration-dotted">${item.phone}</a></td>
+            <td data-label="বর্তমান বাকি" class="p-3 font-bold text-rose-600">${item.remainingAmount.toLocaleString('bn-BD')} ৳</td>
+            <td data-label="কিস্তির পরিমাণ" class="p-3 font-bold text-blue-600">${item.perInstallment.toLocaleString('bn-BD')} ৳</td>
+            <td class="act p-3 text-center">
+              <button onclick="openPayModal('${item.id}')" 
+                      class="bg-emerald-600 active:bg-emerald-800 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-3 md:py-2 rounded-xl shadow">
+                আদায় করুন
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    // তারিখ পরিবর্তন ইভেন্ট
+    datePicker.addEventListener("change", (e) => {
+      loadSchedule(e.target.value);
+    });
+
+    // শুরুতে আজকেরটা লোড হবে
+    loadSchedule(todayStr);
+
+    // মডাল হ্যান্ডলার
+    window.openPayModal = (loanId) => {
+      selectedLoanForPay = currentScheduleLoans.find(l => l.id === loanId);
+      if (!selectedLoanForPay) return;
+
+      document.getElementById("modalCustName").innerText = `${selectedLoanForPay.name} - কিস্তি গ্রহণ`;
+      document.getElementById("modalRemaining").innerText = `${selectedLoanForPay.remainingAmount} ৳`;
+      document.getElementById("modalPerInst").innerText = `${selectedLoanForPay.perInstallment} ৳`;
+      document.getElementById("modalPayAmount").value = selectedLoanForPay.perInstallment;
+      document.getElementById("modalSavings").innerText = `${Number(selectedLoanForPay.savingsBalance || 0)} ৳`;
+      document.getElementById("modalSavingsAmount").value = 100;
+      updateModalTotal();
+      document.getElementById("collectModal").classList.remove("hidden");
+      document.body.style.overflow = "hidden"; // পেছনের পেজ স্ক্রল বন্ধ
+    };
+
+    function updateModalTotal() {
+      const a = Number(document.getElementById("modalPayAmount").value) || 0;
+      const s = Number(document.getElementById("modalSavingsAmount").value) || 0;
+      document.getElementById("modalTotal").innerText = `${a + s} ৳`;
+    }
+    document.getElementById("modalPayAmount").addEventListener("input", updateModalTotal);
+    document.getElementById("modalSavingsAmount").addEventListener("input", updateModalTotal);
+
+    window.closeModal = () => {
+      document.getElementById("collectModal").classList.add("hidden");
+      document.body.style.overflow = "";
+      selectedLoanForPay = null;
+    };
+
+    // মডালের বাইরে ট্যাপ করলে বন্ধ হবে
+    document.getElementById("collectModal").addEventListener("click", (e) => {
+      if (e.target.id === "collectModal") closeModal();
+    });
+
+    // কিস্তি সাবমিট এবং পরবর্তী তারিখ শিডিউল করা
+    document.getElementById("modalPayForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const amount = Number(document.getElementById("modalPayAmount").value);
+      const note = document.getElementById("modalPayNote").value.trim();
+      const savings = Math.max(0, Number(document.getElementById("modalSavingsAmount").value) || 0);
+
+      if (!selectedLoanForPay || amount <= 0) return;
+
+      const submitBtn = document.getElementById("modalSubmitBtn");
+      submitBtn.disabled = true;
+      submitBtn.innerText = "প্রসেসিং...";
+
+      try {
+        const loanRef = doc(db, "loans", selectedLoanForPay.id);
+        const colRef = doc(collection(db, "collections"));
+
+        await runTransaction(db, async (t) => {
+          const lDoc = await t.get(loanRef);
+          if (!lDoc.exists()) throw "লোন তথ্য নেই!";
+
+          const d = lDoc.data();
+          const newPaid = Number(d.paidAmount || 0) + amount;
+          const newRemaining = Number(d.remainingAmount) - amount;
+          const isDone = newRemaining <= 0;
+
+          // পরবর্তী কিস্তির তারিখ হিসেব (যেমন ৭ দিন বা ১ দিন যোগ)
+          const nextDate = isDone ? "" : getNextDate(d.nextDueDate || todayStr, d.frequency || 'weekly');
+
+          t.update(loanRef, {
+            paidAmount: newPaid,
+            remainingAmount: newRemaining,
+            savingsBalance: Number(d.savingsBalance || 0) + savings,
+            status: isDone ? "completed" : "active",
+            nextDueDate: nextDate,
+            lastPaymentDate: new Date()
+          });
+
+          t.set(colRef, {
+            loanId: selectedLoanForPay.id,
+            customerName: d.name,
+            customerPhone: d.phone,
+            amount: amount,
+            savingsAmount: savings,
+            note: note || "নিয়মিত কিস্তি আদায়",
+            collectedByUid: localStorage.getItem("userUid"),
+            collectedByName: localStorage.getItem("userName") || "অফিসার",
+            timestamp: serverTimestamp()
+          });
+        });
+
+        alert(`সফলভাবে জমা হয়েছে: কিস্তি ${amount} ৳` + (savings > 0 ? ` + সঞ্চয় ${savings} ৳` : ""));
+        closeModal();
+      } catch (err) {
+        alert("ভুল হয়েছে: " + err);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "জমা নিশ্চিত করুন";
+      }
+    });
+  </script>
+</body>
+</html>

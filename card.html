@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#047857">
+  <title>সদস্য আইডি কার্ড</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    html { -webkit-text-size-adjust: 100%; }
+    body { font-family: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+
+    /* কার্ডের মাপ: ৮৫.৬ × ৫৪ মিমি (এটিএম কার্ডের সমান)। পর্দায় ছোট-বড় হলেও অনুপাত একই থাকে */
+    .card-wrap { container-type: inline-size; width: min(100%, 430px); margin: 0 auto; }
+    .id-card {
+      position: relative; width: 100%; aspect-ratio: 85.6 / 54;
+      background: #fff; border: 1px solid #cbd5e1; border-radius: 4cqw; overflow: hidden;
+      display: flex; flex-direction: column;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .id-head { background: linear-gradient(90deg, #047857, #115e59); color: #fff; padding: 0 4cqw; height: 11cqw; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .id-head b { font-size: 4.4cqw; font-weight: 700; }
+    .id-head span { font-size: 3cqw; opacity: .85; }
+    .id-body { flex: 1; display: flex; gap: 3.5cqw; padding: 3.5cqw 4cqw; min-height: 0; }
+    .id-photo { width: 24cqw; height: 30cqw; border-radius: 2cqw; border: 0.4cqw solid #d1d5db; background: #f3f4f6; object-fit: cover; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9cqw; color: #9ca3af; overflow: hidden; }
+    .id-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
+    .id-name { font-size: 5.2cqw; font-weight: 700; color: #0f172a; line-height: 1.2; word-break: break-word; }
+    .id-line { font-size: 3.2cqw; color: #334155; line-height: 1.3; margin-top: 1.2cqw; word-break: break-word; }
+    #cAddress { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .id-line small { display: block; font-size: 2.6cqw; color: #94a3b8; }
+    .id-bottom { display: flex; justify-content: space-between; align-items: flex-end; gap: 2cqw; }
+    .id-scan { font-size: 2.6cqw; color: #64748b; line-height: 1.3; }
+    .id-qr { width: 19cqw; height: 19cqw; flex-shrink: 0; background: #fff; }
+    #qrcode { width: 100%; height: 100%; }
+    #qrcode img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+    .qr-error { font-size: 2.4cqw; color: #be123c; text-align: center; }
+
+    @media print {
+      @page { size: A4; margin: 10mm; }
+      body { background: #fff !important; }
+      .no-print { display: none !important; }
+      .card-wrap { width: 85.6mm; margin: 0; }
+      .id-card { border: 0.3mm dashed #94a3b8; } /* কাটার দাগ */
+    }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-[100dvh] p-3 sm:p-6" style="padding-top: max(0.75rem, env(safe-area-inset-top))">
+
+  <div class="max-w-xl mx-auto space-y-4">
+
+    <div class="no-print flex justify-between items-center gap-2">
+      <button onclick="window.history.back()" class="text-sm font-semibold text-gray-700 bg-white border active:bg-gray-100 px-4 py-2.5 rounded-xl shadow-sm">← ফিরে যান</button>
+      <button onclick="window.print()" class="bg-emerald-600 active:bg-emerald-800 hover:bg-emerald-700 text-white text-sm px-4 py-2.5 rounded-xl font-semibold shadow flex items-center gap-1.5">
+        <span>🖨️</span> কার্ড প্রিন্ট করুন
+      </button>
+    </div>
+
+    <div class="card-wrap">
+      <div class="id-card">
+        <div class="id-head">
+          <b>ক্ষুদ্র ঋণ সেবা সংস্থা</b>
+          <span>সদস্য পরিচয়পত্র</span>
+        </div>
+        <div class="id-body">
+          <div id="photoBox" class="id-photo">👤</div>
+          <div class="id-info">
+            <div>
+              <div id="cName" class="id-name">লোড হচ্ছে...</div>
+              <div class="id-line"><small>জাতীয় পরিচয়পত্র (NID)</small><span id="cNid">-</span></div>
+              <div class="id-line"><small>ঠিকানা</small><span id="cAddress">-</span></div>
+            </div>
+            <div class="id-bottom">
+              <div class="id-scan">স্ক্যান করে<br>হিসাব দেখুন</div>
+              <div class="id-qr"><div id="qrcode"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="no-print text-center text-xs text-gray-400 leading-relaxed">
+      প্রিন্ট করলে কার্ডটি ঠিক ৮৫.৬ × ৫৪ মিমি মাপে আসবে। দাগ ধরে কেটে ল্যামিনেট করে নিন।
+    </p>
+  </div>
+
+  <script type="module">
+    import { db, checkAccess, doc, getDoc } from "./firebase-config.js";
+
+    checkAccess(); // শুধু লগইন করা অফিসার/মালিক কার্ড প্রিন্ট করতে পারবে
+
+    // কিউআর কোড আঁকা: লাইব্রেরির ক্যানভাস থেকে সরাসরি নিজস্ব ছবি বানানো হয় (প্রিন্ট/পিডিএফেও ঠিক দেখায়)
+    function renderQR(text) {
+      const box = document.getElementById("qrcode");
+      box.innerHTML = "";
+      try {
+        const tmp = document.createElement("div");
+        new QRCode(tmp, {
+          text: text,
+          width: 512,
+          height: 512,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+        const canvas = tmp.querySelector("canvas");
+        const img = new Image();
+        img.alt = "QR কোড";
+        img.src = canvas.toDataURL("image/png");
+        box.appendChild(img);
+      } catch (err) {
+        console.error(err);
+        box.innerHTML = '<div class="qr-error">QR তৈরি হয়নি।<br>পেজ রিফ্রেশ করুন</div>';
+      }
+    }
+
+    const loanId = new URLSearchParams(window.location.search).get("id");
+    const nameEl = document.getElementById("cName");
+
+    if (!loanId) {
+      nameEl.innerText = "তথ্য পাওয়া যায়নি";
+    } else {
+      getDoc(doc(db, "loans", loanId)).then((snap) => {
+        if (!snap.exists()) { nameEl.innerText = "তথ্য পাওয়া যায়নি"; return; }
+        const d = snap.data();
+
+        nameEl.innerText = d.name || "গ্রাহক";
+        document.getElementById("cNid").innerText = d.nid || "-";
+        document.getElementById("cAddress").innerText = d.address || "ঠিকানা দেওয়া নেই";
+
+        if (d.photo) {
+          const img = document.createElement("img");
+          img.src = d.photo;
+          img.alt = "";
+          img.style.cssText = "width:100%;height:100%;object-fit:cover";
+          const box = document.getElementById("photoBox");
+          box.innerHTML = "";
+          box.appendChild(img);
+        }
+
+        // কিউআর কোড: স্ক্যান করলে পূর্ণ পাসবুক (সব হিসাব) খুলবে
+        const link = new URL("passbook.html", window.location.href);
+        link.search = "?id=" + encodeURIComponent(loanId);
+        renderQR(link.href);
+      }).catch((err) => {
+        console.error(err);
+        nameEl.innerText = "লোড করা যায়নি";
+      });
+    }
+  </script>
+</body>
+</html>
