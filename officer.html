@@ -2,178 +2,320 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#ffffff">
-  <title>অফিসার প্যানেল - লোন আবেদন</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#059669">
+  <title>অফিসার ড্যাশবোর্ড</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    html { -webkit-text-size-adjust: 100%; }
-    body { font-family: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); }
-    input, select, textarea { font-size: 16px; } /* আইফোনে ফোকাস করলে জুম হওয়া বন্ধ */
-    button, a.btn { touch-action: manipulation; }
-    .no-scrollbar { scrollbar-width: none; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    @media (max-width: 767px) {
-      .rtable thead { display: none; }
-      .rtable, .rtable tbody, .rtable tr, .rtable td { display: block; width: 100%; }
-      .rtable tr { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 10px 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
-      .rtable td { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 7px 0 !important; text-align: right; }
-      .rtable td::before { content: attr(data-label); color: #6b7280; font-size: 12px; text-align: left; flex-shrink: 0; }
-      .rtable td.title { display: block; text-align: left; font-size: 17px; font-weight: 700; padding-bottom: 9px !important; margin-bottom: 4px; border-bottom: 1px dashed #e5e7eb; }
-      .rtable td.title::before, .rtable td.act::before, .rtable td.full::before { display: none; }
-      .rtable td.act { display: block; padding-top: 10px !important; }
-      .rtable td.act > * { width: 100%; text-align: center; }
-      .rtable td.full { display: block; text-align: center; }
+    body { 
+      font-family: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif; 
+      -webkit-tap-highlight-color: transparent; 
+      padding-bottom: env(safe-area-inset-bottom);
     }
+    input, select, textarea { font-size: 16px !important; }
+    button, a { touch-action: manipulation; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-slate-100 min-h-[100dvh]">
+<body class="bg-slate-100 min-h-screen text-slate-800 antialiased selection:bg-emerald-500 selection:text-white">
 
-  <!-- নেভিগেশন বার -->
-  <nav class="bg-white shadow-sm border-b sticky top-0 z-40" style="padding-top: env(safe-area-inset-top)">
-    <div class="px-4 py-3 flex justify-between items-center gap-3">
-      <div class="min-w-0">
-        <h1 class="text-lg sm:text-xl font-bold text-gray-800 truncate">অফিসার ড্যাশবোর্ড</h1>
-        <p class="text-xs text-gray-500 truncate">স্বাগতম, <span id="officerName" class="font-semibold text-emerald-600">...</span></p>
+  <!-- ================= শীর্ষ হেডার ================= -->
+  <header class="bg-emerald-700 text-white sticky top-0 z-40 shadow-sm" style="padding-top: env(safe-area-inset-top)">
+    <div class="max-w-xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <!-- ব্যাক বাটন (হোম বাদে অন্য পেজে দেখা যাবে) -->
+        <button id="backBtn" onclick="showView('home')" class="hidden p-2 -ml-1 rounded-xl bg-emerald-800/80 active:bg-emerald-900 transition text-white shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="min-w-0">
+          <h1 id="pageTitle" class="text-base font-bold leading-tight truncate">অফিসার ড্যাশবোর্ড</h1>
+          <p id="pageSubtitle" class="text-xs text-emerald-100 truncate">
+            স্বাগতম, <span id="officerName" class="font-semibold text-white">...</span>
+          </p>
+        </div>
       </div>
-      <button id="logoutBtn" class="shrink-0 text-sm bg-rose-50 active:bg-rose-200 hover:bg-rose-100 text-rose-600 px-4 py-2.5 rounded-xl font-medium transition">
-        লগআউট
+      <button id="logoutBtn" class="shrink-0 text-xs bg-emerald-800/90 hover:bg-emerald-900 active:scale-95 text-emerald-100 px-3 py-2 rounded-xl font-medium transition flex items-center gap-1.5 border border-emerald-600/50">
+        <span>লগআউট</span>
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
       </button>
     </div>
-    <div class="px-4 pb-3 flex gap-2 overflow-x-auto no-scrollbar">
-      <a href="collection.html" class="shrink-0 text-sm bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-4 py-2.5 rounded-xl font-medium transition">
-        কিস্তি আদায় পেজ →
-      </a>
-    </div>
-  </nav>
+  </header>
 
-  <div class="max-w-5xl mx-auto p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
+  <!-- ================= মূল কন্টেইনার ================= -->
+  <main class="max-w-xl mx-auto p-3.5 sm:p-4">
 
-    <!-- লোন আবেদন ফর্ম -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 md:p-6">
-      <h2 class="text-base md:text-lg font-bold text-gray-800 mb-4 pb-2 border-b">নতুন লোন আবেদন তৈরি করুন</h2>
+    <!-- ---------------------------------------------------- -->
+    <!-- VIEW 1: HOME (ড্যাশবোর্ড মেনু) ---------------------- -->
+    <!-- ---------------------------------------------------- -->
+    <div id="view-home" class="space-y-4">
       
-      <form id="loanForm" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label for="custName" class="block text-xs font-semibold text-gray-600 mb-1">কাস্টমারের নাম</label>
-            <input type="text" id="custName" required placeholder="যেমন: রহিম উদ্দিন" autocomplete="name"
-                   class="w-full border rounded-xl px-3.5 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
-          </div>
-          <div>
-            <label for="custPhone" class="block text-xs font-semibold text-gray-600 mb-1">মোবাইল নম্বর</label>
-            <input type="tel" id="custPhone" required placeholder="017XXXXXXXX" inputmode="tel" autocomplete="tel"
-                   class="w-full border rounded-xl px-3.5 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
-          </div>
-          <div>
-            <label for="custNid" class="block text-xs font-semibold text-gray-600 mb-1">জাতীয় পরিচয়পত্র (NID)</label>
-            <input type="text" id="custNid" required placeholder="১০ বা ১৭ ডিজিটের NID" inputmode="numeric"
-                   class="w-full border rounded-xl px-3.5 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
-          </div>
+      <!-- স্ট্যাটাস কাউন্টার ৩টি -->
+      <div class="grid grid-cols-3 gap-2.5">
+        <div class="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-sm text-center">
+          <p class="text-[11px] font-semibold text-slate-500">মোট আবেদন</p>
+          <p id="statTotal" class="text-lg font-bold text-slate-800 mt-0.5">০</p>
         </div>
+        <div class="bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200/60 shadow-sm text-center">
+          <p class="text-[11px] font-semibold text-emerald-700">অনুমোদিত</p>
+          <p id="statApproved" class="text-lg font-bold text-emerald-600 mt-0.5">০</p>
+        </div>
+        <div class="bg-amber-50/70 p-3 rounded-2xl border border-amber-200/60 shadow-sm text-center">
+          <p class="text-[11px] font-semibold text-amber-700">অপেক্ষমাণ</p>
+          <p id="statPending" class="text-lg font-bold text-amber-600 mt-0.5">০</p>
+        </div>
+      </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div class="col-span-2 md:col-span-1">
-            <label for="principal" class="block text-xs font-semibold text-gray-600 mb-1">লোনের পরিমাণ (টাকা)</label>
-            <input type="number" id="principal" required min="1000" placeholder="যেমন: 20000" inputmode="numeric"
-                   class="w-full border rounded-xl px-3.5 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-semibold text-gray-800">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">প্রধান মেনু</p>
+
+      <!-- অ্যাকশন মেনু বাটনসমূহ -->
+      <div class="grid grid-cols-2 gap-3">
+        
+        <!-- নতুন লোন আবেদন -->
+        <button onclick="showView('form')" class="bg-white active:scale-[0.98] border border-slate-200 rounded-2xl p-4 flex flex-col justify-between shadow-sm hover:border-emerald-300 transition text-left space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl shrink-0">
+            📝
           </div>
           <div>
-            <label for="installments" class="block text-xs font-semibold text-gray-600 mb-1">কিস্তি সংখ্যা</label>
-            <input type="number" id="installments" required min="1" placeholder="যেমন: 15" inputmode="numeric"
-                   class="w-full border rounded-xl px-3.5 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-semibold text-gray-800">
+            <h3 class="font-bold text-slate-800 text-base leading-snug">নতুন লোন আবেদন</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 leading-tight">নতুন সদস্য যুক্ত ও ফর্ম পূরণ</p>
+          </div>
+        </button>
+
+        <!-- আবেদনের তালিকা -->
+        <button onclick="showView('list')" class="bg-white active:scale-[0.98] border border-slate-200 rounded-2xl p-4 flex flex-col justify-between shadow-sm hover:border-blue-300 transition text-left space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-xl shrink-0">
+            📋
           </div>
           <div>
-            <label for="frequency" class="block text-xs font-semibold text-gray-600 mb-1">কিস্তির ধরন</label>
-            <select id="frequency" class="w-full border rounded-xl px-3 py-3 focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
-              <option value="daily">দৈনিক কিস্তি</option>
-              <option value="weekly" selected>সাপ্তাহিক কিস্তি</option>
-              <option value="monthly">মাসিক কিস্তি</option>
-            </select>
+            <h3 class="font-bold text-slate-800 text-base leading-snug">আবেদনের তালিকা</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 leading-tight">সার্চ ও স্ট্যাটাস যাচাই</p>
           </div>
-        </div>
+        </button>
 
-        <div>
-          <label for="admissionDeposit" class="block text-xs font-semibold text-gray-600 mb-1">ভর্তি জমা (টাকা) — ফেরতযোগ্য</label>
-          <input type="number" id="admissionDeposit" min="0" placeholder="যেমন: 400" inputmode="numeric"
-                 class="w-full border rounded-xl px-3.5 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-semibold text-gray-800">
-          <p id="depositHint" class="text-xs text-gray-400 mt-1">লোনের পরিমাণ লিখলে ১% ও ২% এর হিসাব এখানে দেখাবে</p>
-        </div>
-
-        <div>
-          <label for="address" class="block text-xs font-semibold text-gray-600 mb-1">গ্রাহকের ঠিকানা ও বিবরণ</label>
-          <input type="text" id="address" placeholder="গ্রাম/মহল্লা, থানা, জেলা" autocomplete="street-address"
-                 class="w-full border rounded-xl px-3.5 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">গ্রাহকের ছবি</label>
+        <!-- কিস্তি আদায় পেজ লিংক -->
+        <a href="collection.html" class="col-span-2 bg-gradient-to-r from-emerald-600 to-teal-600 active:scale-[0.99] text-white rounded-2xl p-4 flex items-center justify-between shadow-sm transition">
           <div class="flex items-center gap-3">
-            <div id="photoPreview" class="w-20 h-20 rounded-2xl bg-gray-100 border flex items-center justify-center text-gray-400 text-2xl overflow-hidden shrink-0">📷</div>
-            <div class="flex-1">
-              <input type="file" id="custPhoto" accept="image/*" class="hidden">
-              <button type="button" id="photoBtn" class="w-full border border-emerald-600 text-emerald-700 font-semibold py-3 rounded-xl active:bg-emerald-50">ছবি তুলুন / বাছাই করুন</button>
-              <p id="photoInfo" class="text-xs text-gray-400 mt-1">ছবি নিজে থেকেই ছোট করে সেভ হবে</p>
+            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-xl shrink-0">
+              💰
+            </div>
+            <div>
+              <h3 class="font-bold text-base leading-tight">কিস্তি আদায় পেজ</h3>
+              <p class="text-[11px] text-emerald-100 mt-0.5">মাঠ পর্যায়ে কিস্তি সংগ্রহ করুন</p>
             </div>
           </div>
+          <span class="bg-white/25 px-3 py-1.5 rounded-xl text-xs font-bold tracking-wide shrink-0">যান →</span>
+        </a>
+
+      </div>
+
+    </div>
+
+    <!-- ---------------------------------------------------- -->
+    <!-- VIEW 2: FORM (লোন আবেদন ফর্ম) ---------------------- -->
+    <!-- ---------------------------------------------------- -->
+    <div id="view-form" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+        
+        <form id="loanForm" class="space-y-4">
+          <!-- গ্রাহকের তথ্য -->
+          <div class="space-y-3">
+            <div>
+              <label for="custName" class="block text-xs font-semibold text-slate-600 mb-1">কাস্টমারের নাম *</label>
+              <input type="text" id="custName" required placeholder="যেমন: রহিম উদ্দিন" autocomplete="name"
+                     class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition text-sm">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label for="custPhone" class="block text-xs font-semibold text-slate-600 mb-1">মোবাইল নম্বর *</label>
+                <input type="tel" id="custPhone" required placeholder="017XXXXXXXX" inputmode="tel" autocomplete="tel"
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition text-sm">
+              </div>
+              <div>
+                <label for="custNid" class="block text-xs font-semibold text-slate-600 mb-1">জাতীয় পরিচয়পত্র (NID) *</label>
+                <input type="text" id="custNid" required placeholder="১০ বা ১৭ ডিজিটের NID" inputmode="numeric"
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition text-sm">
+              </div>
+            </div>
+          </div>
+
+          <!-- লোনের তথ্য -->
+          <div class="pt-2 border-t border-slate-100 space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div class="col-span-2">
+                <label for="principal" class="block text-xs font-semibold text-slate-600 mb-1">লোনের পরিমাণ (টাকা) *</label>
+                <input type="number" id="principal" required min="1000" placeholder="যেমন: 20000" inputmode="numeric"
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-bold text-slate-800 transition text-sm">
+              </div>
+              <div>
+                <label for="installments" class="block text-xs font-semibold text-slate-600 mb-1">কিস্তি সংখ্যা *</label>
+                <input type="number" id="installments" required min="1" placeholder="যেমন: 15" inputmode="numeric"
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-bold text-slate-800 transition text-sm">
+              </div>
+              <div>
+                <label for="frequency" class="block text-xs font-semibold text-slate-600 mb-1">কিস্তির ধরন</label>
+                <select id="frequency" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition font-medium text-sm">
+                  <option value="daily">দৈনিক কিস্তি</option>
+                  <option value="weekly" selected>সাপ্তাহিক কিস্তি</option>
+                  <option value="monthly">মাসিক কিস্তি</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label for="admissionDeposit" class="block text-xs font-semibold text-slate-600 mb-1">ভর্তি জমা (টাকা) — ফেরতযোগ্য</label>
+              <input type="number" id="admissionDeposit" min="0" placeholder="যেমন: 400" inputmode="numeric"
+                     class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-semibold text-slate-800 transition text-sm">
+              <p id="depositHint" class="text-[11px] text-emerald-700 bg-emerald-50 p-2 rounded-lg mt-1 font-medium">লোনের পরিমাণ লিখলে ১% ও ২% এর হিসাব এখানে দেখাবে</p>
+            </div>
+
+            <div>
+              <label for="address" class="block text-xs font-semibold text-slate-600 mb-1">গ্রাহকের ঠিকানা ও বিবরণ</label>
+              <input type="text" id="address" placeholder="গ্রাম/মহল্লা, থানা, জেলা" autocomplete="street-address"
+                     class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition text-sm">
+            </div>
+
+            <!-- ছবি আপলোড -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">গ্রাহকের ছবি</label>
+              <div class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <div id="photoPreview" class="w-16 h-16 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 text-xl overflow-hidden shrink-0 shadow-inner">📷</div>
+                <div class="flex-1 min-w-0">
+                  <input type="file" id="custPhoto" accept="image/*" class="hidden">
+                  <button type="button" id="photoBtn" class="w-full text-xs font-bold bg-white active:bg-slate-100 border border-slate-300 text-slate-700 py-2 rounded-lg shadow-sm">ছবি তুলুন / বাছাই করুন</button>
+                  <p id="photoInfo" class="text-[10px] text-slate-500 mt-1 truncate">ছবি নিজে থেকেই ছোট হয়ে সেভ হবে</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button type="submit" id="submitBtn" 
+                    class="w-full bg-emerald-600 active:bg-emerald-800 text-white font-bold text-sm py-3.5 rounded-xl shadow transition disabled:opacity-60 flex items-center justify-center gap-2">
+              <span>মালিকের অনুমোদনের জন্য পাঠান</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+    <!-- ---------------------------------------------------- -->
+    <!-- VIEW 3: LIST (আবেদনের তালিকা ও ফিক্সড সার্চ বক্স) --- -->
+    <!-- ---------------------------------------------------- -->
+    <div id="view-list" class="hidden space-y-3">
+      
+      <!-- সার্চ বার ও ফিল্টার বাটনসমূহ -->
+      <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
+        
+        <!-- সার্চ ইনপুট -->
+        <div class="relative flex items-center">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" id="searchInput" placeholder="নাম, মোবাইল বা NID দিয়ে খুঁজুন..." 
+                 class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-9 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition">
+          
+          <button id="clearSearchBtn" class="hidden absolute right-2.5 text-slate-400 hover:text-slate-600 text-xs bg-slate-200 hover:bg-slate-300 rounded-full w-5 h-5 flex items-center justify-center font-bold">✕</button>
         </div>
 
-        <button type="submit" id="submitBtn" 
-                class="w-full bg-emerald-600 active:bg-emerald-800 hover:bg-emerald-700 text-white font-semibold text-base py-3.5 rounded-xl shadow transition disabled:opacity-60">
-          মালিকের অনুমোদনের জন্য পাঠান
-        </button>
-      </form>
+        <!-- ফিল্টার বাটন চিপস -->
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs pt-0.5">
+          <button onclick="setFilter('all')" id="filter-all" class="filter-chip px-3 py-1.5 rounded-xl font-bold bg-emerald-600 text-white shrink-0 transition shadow-sm">সব</button>
+          <button onclick="setFilter('pending')" id="filter-pending" class="filter-chip px-3 py-1.5 rounded-xl font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 shrink-0 transition">অপেক্ষমাণ</button>
+          <button onclick="setFilter('active')" id="filter-active" class="filter-chip px-3 py-1.5 rounded-xl font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 shrink-0 transition">অনুমোদিত</button>
+          <button onclick="setFilter('completed')" id="filter-completed" class="filter-chip px-3 py-1.5 rounded-xl font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 shrink-0 transition">পরিশোধিত</button>
+        </div>
+      </div>
+
+      <!-- কাউন্টার হেডার -->
+      <div class="flex justify-between items-center px-1">
+        <span id="searchResultCount" class="text-xs font-semibold text-slate-500">ডাটা লোড হচ্ছে...</span>
+        <button onclick="showView('form')" class="text-xs font-bold text-emerald-700 bg-emerald-100 active:bg-emerald-200 px-3 py-1 rounded-xl transition">+ নতুন আবেদন</button>
+      </div>
+
+      <!-- কার্ড লিস্ট কনটেইনার -->
+      <div id="applicationCards" class="space-y-3">
+        <div class="bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-400 text-sm">
+          ডাটা লোড হচ্ছে...
+        </div>
+      </div>
+
     </div>
 
-    <!-- লোন আবেদনের তালিকা -->
-    <div class="md:bg-white md:rounded-2xl md:shadow-sm md:border md:border-gray-200 md:p-6">
-      <h3 class="text-base font-bold text-gray-800 mb-3 px-1 md:px-0">আপনার পাঠানো লোন আবেদনসমূহ</h3>
-      <table class="rtable w-full text-left text-sm">
-        <thead class="bg-gray-50 text-gray-600 border-b">
-          <tr>
-            <th class="p-3">গ্রাহকের নাম</th>
-            <th class="p-3">মোবাইল</th>
-            <th class="p-3">টাকার পরিমাণ</th>
-            <th class="p-3">কিস্তি</th>
-            <th class="p-3">স্ট্যাটাস</th>
-            <th class="p-3">পাসবুক</th>
-          </tr>
-        </thead>
-        <tbody id="applicationTable" class="md:divide-y md:divide-gray-100">
-          <tr>
-            <td colspan="6" class="full p-4 text-center text-gray-400">ডাটা লোড হচ্ছে...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  </main>
 
-  </div>
-
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script type="module">
     import { db, checkAccess, handleLogout, collection, addDoc, query, where, onSnapshot, serverTimestamp } from "./firebase-config.js";
 
-    checkAccess(); // লগইন নিশ্চিত করা
+    checkAccess();
 
     document.getElementById("officerName").innerText = localStorage.getItem("userName") || "অফিসার";
     document.getElementById("logoutBtn").addEventListener("click", handleLogout);
 
     const officerUid = localStorage.getItem("userUid");
 
-    // ---- ভর্তি জমার ১%-২% হিসাব (শুধু সহায়তা; আসল টাকা অফিসার নিজে লিখবেন) ----
+    // বাংলা সংখ্যাকে ইংরেজি সংখ্যায় রূপান্তরের হেল্পার (সার্চের জন্য)
+    function normalizeDigits(str) {
+      if (!str) return '';
+      const bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      return String(str).replace(/[০-৯]/g, d => bn.indexOf(d)).toLowerCase().trim();
+    }
+
+    // ================= VIEW SWITCHER =================
+    window.showView = function(viewName) {
+      const views = {
+        'home': document.getElementById('view-home'),
+        'form': document.getElementById('view-form'),
+        'list': document.getElementById('view-list')
+      };
+
+      const titles = {
+        'home': 'অফিসার ড্যাশবোর্ড',
+        'form': 'নতুন লোন আবেদন',
+        'list': 'আবেদনের তালিকা'
+      };
+
+      const subtitles = {
+        'home': `স্বাগতম, <span class="font-semibold text-white">${localStorage.getItem("userName") || "অফিসার"}</span>`,
+        'form': 'সঠিক তথ্য দিয়ে ফর্মটি পূরণ করুন',
+        'list': 'কাস্টমার খুঁজুন ও স্ট্যাটাস দেখুন'
+      };
+
+      Object.keys(views).forEach(key => views[key].classList.add('hidden'));
+      if (views[viewName]) views[viewName].classList.remove('hidden');
+
+      const backBtn = document.getElementById('backBtn');
+      if (viewName === 'home') {
+        backBtn.classList.add('hidden');
+      } else {
+        backBtn.classList.remove('hidden');
+      }
+
+      document.getElementById('pageTitle').innerText = titles[viewName] || 'ড্যাশবোর্ড';
+      document.getElementById('pageSubtitle').innerHTML = subtitles[viewName] || '';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // ================= ভর্তি জমার হিসাব =================
     function updateDepositHint() {
       const p = Number(document.getElementById("principal").value) || 0;
       const hint = document.getElementById("depositHint");
       if (p > 0) {
-        hint.innerText = `১% = ${Math.round(p * 0.01).toLocaleString('bn-BD')} ৳ | ২% = ${Math.round(p * 0.02).toLocaleString('bn-BD')} ৳`;
+        hint.innerText = `হিসাব: ১% = ${Math.round(p * 0.01).toLocaleString('bn-BD')} ৳ | ২% = ${Math.round(p * 0.02).toLocaleString('bn-BD')} ৳`;
       } else {
         hint.innerText = "লোনের পরিমাণ লিখলে ১% ও ২% এর হিসাব এখানে দেখাবে";
       }
     }
     document.getElementById("principal").addEventListener("input", updateDepositHint);
 
-    // ---- গ্রাহকের ছবি: ফোনেই ছোট (কমপ্রেস) করে base64 হিসেবে সেভ হবে ----
+    // ================= ছবি কম্প্রেশন =================
     let photoData = "";
     const photoInput = document.getElementById("custPhoto");
     const photoPreview = document.getElementById("photoPreview");
@@ -202,7 +344,7 @@
       photoData = "";
       photoInput.value = "";
       photoPreview.innerHTML = "📷";
-      photoInfo.innerText = "ছবি নিজে থেকেই ছোট করে সেভ হবে";
+      photoInfo.innerText = "ছবি নিজে থেকেই ছোট হয়ে সেভ হবে";
     }
 
     document.getElementById("photoBtn").addEventListener("click", () => photoInput.click());
@@ -210,16 +352,17 @@
       const file = photoInput.files[0];
       if (!file) return;
       try {
+        photoInfo.innerText = "ছবি প্রস্তুত হচ্ছে...";
         photoData = await compressImage(file);
-        photoPreview.innerHTML = `<img src="${photoData}" alt="গ্রাহকের ছবি" class="w-full h-full object-cover">`;
+        photoPreview.innerHTML = `<img src="${photoData}" alt="গ্রাহক" class="w-full h-full object-cover">`;
         photoInfo.innerText = `ছবি প্রস্তুত (${Math.round(photoData.length * 0.75 / 1024)} KB)`;
       } catch (err) {
         resetPhoto();
-        alert("ছবিটি পড়া যায়নি, আবার চেষ্টা করুন।");
+        alert("ছবিটি পড়া যায়নি, আবার চেষ্টা করুন।");
       }
     });
 
-    // আবেদন ফর্ম সাবমিট
+    // ================= ফর্ম সাবমিশন =================
     document.getElementById("loanForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const submitBtn = document.getElementById("submitBtn");
@@ -241,7 +384,7 @@
         perInstallment: 0,
         paidAmount: 0,
         remainingAmount: 0,
-        status: "pending", // মালিকের অপেক্ষায়
+        status: "pending",
         appliedByUid: officerUid,
         appliedByName: localStorage.getItem("userName") || "Officer",
         branchId: localStorage.getItem("branchId") || "main",
@@ -250,10 +393,11 @@
 
       try {
         await addDoc(collection(db, "loans"), newLoan);
-        alert("লোন আবেদনটি মালিকের নিকট পাঠানো হয়েছে!");
+        alert("লোন আবেদনটি সফলভাবে পাঠানো হয়েছে!");
         document.getElementById("loanForm").reset();
         resetPhoto();
         updateDepositHint();
+        showView('list');
       } catch (err) {
         console.error(err);
         alert("আবেদন জমা দিতে সমস্যা হয়েছে।");
@@ -263,50 +407,193 @@
       }
     });
 
-    // অফিসারের নিজের পাঠানো আবেদনের তালিকা দেখানো
-    const q = query(collection(db, "loans"), where("appliedByUid", "==", officerUid));
-    onSnapshot(q, (snapshot) => {
-      const tbody = document.getElementById("applicationTable");
-      tbody.innerHTML = "";
+    // ================= সার্চ ও ফিল্টারিং লজিক (১০০% বাগ-মুক্ত) =================
+    let allLoanApplications = []; // সব লোনের ফ্ল্যাট অবজেক্ট থাকবে এখানে
+    let activeFilterStatus = 'all';
 
-      if (snapshot.empty) {
-        tbody.innerHTML = `<tr><td colspan="6" class="full p-4 text-center text-gray-400">এখনো কোনো আবেদন জমা দেননি।</td></tr>`;
+    const searchInput = document.getElementById("searchInput");
+    const clearSearchBtn = document.getElementById("clearSearchBtn");
+
+    window.setFilter = function(status) {
+      activeFilterStatus = status;
+      document.querySelectorAll('.filter-chip').forEach(btn => {
+        btn.className = "filter-chip px-3 py-1.5 rounded-xl font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 shrink-0 transition";
+      });
+      const activeBtn = document.getElementById(`filter-${status}`);
+      if (activeBtn) {
+        activeBtn.className = "filter-chip px-3 py-1.5 rounded-xl font-bold bg-emerald-600 text-white shrink-0 transition shadow-sm";
+      }
+      renderLoanCards();
+    };
+
+    searchInput.addEventListener("input", () => {
+      if (searchInput.value.trim().length > 0) {
+        clearSearchBtn.classList.remove("hidden");
+      } else {
+        clearSearchBtn.classList.add("hidden");
+      }
+      renderLoanCards();
+    });
+
+    clearSearchBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      clearSearchBtn.classList.add("hidden");
+      searchInput.focus();
+      renderLoanCards();
+    });
+
+    // কার্ড রেন্ডার ফাংশন
+    function renderLoanCards() {
+      const container = document.getElementById("applicationCards");
+      const countEl = document.getElementById("searchResultCount");
+      const rawQuery = searchInput.value.trim();
+      const queryNorm = normalizeDigits(rawQuery);
+
+      // নিখুঁত ফিল্টারিং
+      const filtered = allLoanApplications.filter(loan => {
+        // ১. স্ট্যাটাস ফিল্টার
+        if (activeFilterStatus !== 'all' && loan.status !== activeFilterStatus) {
+          return false;
+        }
+        // ২. সার্চ কুয়েরি ফিল্টার (নাম, মোবাইল, NID)
+        if (rawQuery) {
+          const name = String(loan.name || '').toLowerCase();
+          const phone = normalizeDigits(loan.phone || '');
+          const nid = normalizeDigits(loan.nid || '');
+
+          const matchName = name.includes(rawQuery.toLowerCase());
+          const matchPhone = phone.includes(queryNorm);
+          const matchNid = nid.includes(queryNorm);
+
+          return matchName || matchPhone || matchNid;
+        }
+        return true;
+      });
+
+      countEl.innerText = `পাওয়া গেছে: ${filtered.length.toLocaleString('bn-BD')} জন`;
+      container.innerHTML = "";
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-7 rounded-2xl border border-slate-200 text-center space-y-2.5">
+            <span class="text-3xl block">🔍</span>
+            <p class="text-slate-700 font-bold text-sm">কোনো কাস্টমার পাওয়া যায়নি</p>
+            <p class="text-slate-400 text-xs">নাম, মোবাইল নম্বর বা NID সঠিক আছে কিনা যাচাই করুন।</p>
+            ${rawQuery ? `<button onclick="document.getElementById('clearSearchBtn').click()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl mt-2 transition">সার্চ পরিষ্কার করুন</button>` : ''}
+          </div>
+        `;
         return;
       }
 
-      snapshot.forEach((docSnap) => {
-        const item = docSnap.data();
-        const id = docSnap.id;
+      // কাস্টমার কার্ড ডিজাইন (মোবাইলে একদম ক্লিন ও নিট)
+      filtered.forEach(loan => {
+        let badge = `<span class="bg-amber-100 text-amber-800 text-[11px] px-2.5 py-0.5 rounded-full font-bold shrink-0">অপেক্ষমাণ</span>`;
+        if (loan.status === 'active') {
+          badge = `<span class="bg-emerald-100 text-emerald-800 text-[11px] px-2.5 py-0.5 rounded-full font-bold shrink-0">অনুমোদিত</span>`;
+        } else if (loan.status === 'completed') {
+          badge = `<span class="bg-blue-100 text-blue-800 text-[11px] px-2.5 py-0.5 rounded-full font-bold shrink-0">পরিশোধিত</span>`;
+        } else if (loan.status === 'rejected') {
+          badge = `<span class="bg-rose-100 text-rose-800 text-[11px] px-2.5 py-0.5 rounded-full font-bold shrink-0">বাতিল</span>`;
+        }
 
-        let badge = `<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-semibold">অপেক্ষমাণ</span>`;
-        if (item.status === 'active') badge = `<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-semibold">অনুমোদিত</span>`;
-        if (item.status === 'completed') badge = `<span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-semibold">পরিশোধিত</span>`;
-        if (item.status === 'rejected') badge = `<span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-1 rounded-full font-semibold">বাতিল</span>`;
+        const freqText = loan.frequency === 'daily' ? 'দৈনিক' : loan.frequency === 'weekly' ? 'সাপ্তাহিক' : 'মাসিক';
 
-        const tr = document.createElement("tr");
-        tr.className = "hover:bg-gray-50";
-        tr.innerHTML = `
-          <td class="title p-3 font-medium text-gray-800">
-            <div class="flex items-center gap-3">
-              ${item.photo ? `<img src="${item.photo}" alt="" class="w-10 h-10 rounded-full object-cover border shrink-0">` : ``}
-              <span>${item.name}</span>
+        const card = document.createElement("div");
+        card.className = "bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3";
+        card.innerHTML = `
+          <!-- কাস্টমার প্রোফাইল ও স্ট্যাটাস -->
+          <div class="flex items-start justify-between gap-2.5">
+            <div class="flex items-center gap-3 min-w-0">
+              ${loan.photo 
+                ? `<img src="${loan.photo}" alt="" class="w-11 h-11 rounded-xl object-cover border border-slate-200 shrink-0">` 
+                : `<div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg border border-emerald-100 shrink-0">👤</div>`}
+              <div class="min-w-0">
+                <h4 class="font-bold text-slate-800 text-sm leading-tight truncate">${loan.name}</h4>
+                <div class="flex items-center gap-2 mt-1">
+                  <a href="tel:${loan.phone}" class="text-xs text-emerald-700 font-semibold hover:underline flex items-center gap-1">
+                    📞 ${loan.phone}
+                  </a>
+                </div>
+              </div>
             </div>
-          </td>
-          <td data-label="মোবাইল" class="p-3 text-gray-600">${item.phone}</td>
-          <td data-label="টাকার পরিমাণ" class="p-3 font-semibold text-gray-700">${item.principal} ৳</td>
-          <td data-label="কিস্তি" class="p-3 text-gray-600">${item.installments} টি</td>
-          <td data-label="স্ট্যাটাস" class="p-3">${badge}</td>
-          <td class="act p-3">
-            ${item.status === 'active' || item.status === 'completed' 
-              ? `<div class="flex gap-2 md:gap-3">
-                  <a href="card.html?id=${id}" target="_blank" class="flex-1 md:flex-none inline-block bg-emerald-600 md:bg-transparent text-white md:text-emerald-600 md:hover:underline font-semibold md:font-medium text-sm md:text-xs py-2.5 md:py-0 rounded-xl">আইডি কার্ড ↗</a>
-                  <a href="passbook.html?id=${id}" target="_blank" class="flex-1 md:flex-none inline-block bg-emerald-50 md:bg-transparent text-emerald-700 md:text-emerald-600 md:hover:underline font-semibold md:font-medium text-sm md:text-xs py-2.5 md:py-0 rounded-xl">পাসবুক ↗</a>
-                </div>` 
-              : `<span class="text-gray-400 text-xs">অনুমোদন প্রয়োজন</span>`}
-          </td>
+            ${badge}
+          </div>
+
+          <!-- NID নম্বর (যদি থাকে) -->
+          ${loan.nid ? `
+            <div class="bg-slate-50 px-2.5 py-1 rounded-lg text-[11px] text-slate-500 font-mono flex items-center justify-between">
+              <span>NID:</span>
+              <span class="font-semibold text-slate-700">${loan.nid}</span>
+            </div>
+          ` : ''}
+
+          <!-- লোন হিসাবের গ্রিড -->
+          <div class="grid grid-cols-2 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 text-xs gap-2">
+            <div>
+              <span class="text-slate-400 block text-[10px] font-medium">লোনের পরিমাণ</span>
+              <span class="font-bold text-slate-800 text-sm leading-tight">${Number(loan.principal || 0).toLocaleString('bn-BD')} ৳</span>
+            </div>
+            <div class="text-right">
+              <span class="text-slate-400 block text-[10px] font-medium">কিস্তি ও মেয়াদ</span>
+              <span class="font-semibold text-slate-700 leading-tight">${loan.installments || 0} টি (${freqText})</span>
+            </div>
+          </div>
+
+          <!-- বাটনসমূহ -->
+          <div class="pt-0.5">
+            ${loan.status === 'active' || loan.status === 'completed' ? `
+              <div class="grid grid-cols-2 gap-2">
+                <a href="card.html?id=${loan.id}" target="_blank" class="text-center bg-emerald-600 active:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-sm">
+                  আইডি কার্ড ↗
+                </a>
+                <a href="passbook.html?id=${loan.id}" target="_blank" class="text-center bg-emerald-50 active:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs py-2.5 rounded-xl transition">
+                  পাসবুক ↗
+                </a>
+              </div>
+            ` : `
+              <div class="text-center text-[11px] text-amber-700 bg-amber-50 py-2 rounded-xl border border-amber-200/50 font-medium">
+                ⏳ মালিকের অনুমোদনের পর কার্ড ও পাসবুক পাওয়া যাবে
+              </div>
+            `}
+          </div>
         `;
-        tbody.appendChild(tr);
+        container.appendChild(card);
       });
+    }
+
+    // ================= ফায়ারবেস ডেটা স্ন্যাপশট =================
+    const q = query(collection(db, "loans"), where("appliedByUid", "==", officerUid));
+    onSnapshot(q, (snapshot) => {
+      allLoanApplications = [];
+
+      let countTotal = 0;
+      let countApproved = 0;
+      let countPending = 0;
+
+      snapshot.forEach((docSnap) => {
+        countTotal++;
+        const data = docSnap.data();
+        
+        // ফ্ল্যাট অবজেক্ট হিসেবে সেভ করা হয়েছে (যাতে সার্চে ফিল্টার ১০০% কাজ করে)
+        allLoanApplications.push({
+          id: docSnap.id,
+          ...data
+        });
+
+        if (data.status === 'active' || data.status === 'completed') {
+          countApproved++;
+        } else if (data.status === 'pending') {
+          countPending++;
+        }
+      });
+
+      // হোম স্ক্রিনের কাউন্টার আপডেট
+      document.getElementById("statTotal").innerText = countTotal.toLocaleString('bn-BD');
+      document.getElementById("statApproved").innerText = countApproved.toLocaleString('bn-BD');
+      document.getElementById("statPending").innerText = countPending.toLocaleString('bn-BD');
+
+      // কার্ড লিস্ট পুনরায় ড্র করা
+      renderLoanCards();
     });
   </script>
 </body>
