@@ -104,8 +104,10 @@
 
     checkAccess();
 
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+    const esc = (t) => String(t ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const localDateStr = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const todayStr = localDateStr();
+    const ymd = (s) => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, m - 1, d); };
 
     // সক্রিয় সব লোন পর্যবেক্ষণ
     const q = query(collection(db, "loans"), where("status", "==", "active"));
@@ -126,18 +128,17 @@
           totalOverdueBalance += Number(item.remainingAmount || 0);
 
           // কত দিন দেরি হয়েছে বের করা
-          const dueDate = new Date(item.nextDueDate);
-          const diffDays = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+          const diffDays = Math.round((ymd(todayStr) - ymd(item.nextDueDate)) / 86400000);
 
           const tr = document.createElement("tr");
           tr.className = "hover:bg-rose-50/30 transition";
           tr.innerHTML = `
             <td class="title p-3">
-              <p class="font-bold text-gray-800">${item.name}</p>
-              <p class="text-xs font-normal text-gray-400">${item.address || 'ঠিকানা দেওয়া নেই'}</p>
+              <p class="font-bold text-gray-800">${esc(item.name)}</p>
+              <p class="text-xs font-normal text-gray-400">${esc(item.address || 'ঠিকানা দেওয়া নেই')}</p>
             </td>
-            <td data-label="মোবাইল" class="p-3 text-gray-700 font-medium">${item.phone}</td>
-            <td data-label="কিস্তির তারিখ ছিল" class="p-3 font-semibold text-rose-600">${item.nextDueDate}</td>
+            <td data-label="মোবাইল" class="p-3 text-gray-700 font-medium">${esc(item.phone)}</td>
+            <td data-label="কিস্তির তারিখ ছিল" class="p-3 font-semibold text-rose-600">${esc(item.nextDueDate)}</td>
             <td data-label="বকেয়ার সময়" class="p-3">
               <span class="bg-rose-100 text-rose-700 text-xs px-2.5 py-1 rounded-full font-bold">
                 ${diffDays} দিন অনাদায়ী
@@ -146,9 +147,14 @@
             <td data-label="মোট ঋণ বাকি" class="p-3 font-black text-gray-800">${item.remainingAmount.toLocaleString('bn-BD')} ৳</td>
             <td data-label="কিস্তির পরিমাণ" class="p-3 font-bold text-blue-600">${item.perInstallment.toLocaleString('bn-BD')} ৳</td>
             <td class="act p-3 text-center no-print">
-              <a href="tel:${item.phone}" class="inline-block bg-emerald-600 active:bg-emerald-800 hover:bg-emerald-700 text-white text-sm px-4 py-3 md:py-1.5 md:text-xs rounded-xl shadow font-semibold">
-                কল দিন 📞
-              </a>
+              <div class="flex gap-2 justify-center">
+                <a href="tel:${esc(item.phone)}" class="inline-block bg-emerald-600 active:bg-emerald-800 hover:bg-emerald-700 text-white text-sm px-4 py-3 md:py-1.5 md:text-xs rounded-xl shadow font-semibold">
+                  কল দিন 📞
+                </a>
+                <a href="collection.html?q=${encodeURIComponent(item.phone || '')}" class="inline-block bg-blue-600 active:bg-blue-800 hover:bg-blue-700 text-white text-sm px-4 py-3 md:py-1.5 md:text-xs rounded-xl shadow font-semibold">
+                  আদায় করুন 💰
+                </a>
+              </div>
             </td>
           `;
           tbody.appendChild(tr);

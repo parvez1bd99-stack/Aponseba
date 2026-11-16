@@ -168,6 +168,7 @@
     import { db, doc, onSnapshot, collection, query, where } from "./firebase-config.js";
 
     // তারিখ ইংরেজিতে দেখানো (যেমন: 10 Nov 2026)
+    const esc = (t) => String(t ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     const fmtDate = (d) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     const fmtDateStr = (str) => {
       if (!str) return null;
@@ -243,7 +244,7 @@
       });
 
       // ৩. এই লোনের যাবতীয় কিস্তি আদায়ের ইতিহাস (হিসাবের স্বচ্ছতার জন্য)
-      const historyQuery = query(collection(db, "collections"), where("loanId", "==", loanId));
+      const historyQuery = collection(db, "loans", loanId, "history");
       
       onSnapshot(historyQuery, (snapshot) => {
         const tbody = document.getElementById("historyBody");
@@ -267,21 +268,36 @@
         });
 
         historyList.forEach((item) => {
-          let dateStr = "সাম্প্রতিক";
+          let dateStr = "সাম্প্রতিক", dayName = "", timeText = "";
           if (item.timestamp && item.timestamp.toDate) {
-            dateStr = fmtDate(item.timestamp.toDate());
+            const dt = item.timestamp.toDate();
+            dateStr = fmtDate(dt);
+            dayName = dt.toLocaleDateString('bn-BD', { weekday: 'long' });
+            timeText = dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+          }
+          let instLabel = "";
+          if (item.instFrom) {
+            instLabel = item.instFrom === item.instTo ? `কিস্তি নং ${item.instFrom}` : `কিস্তি নং ${item.instFrom}–${item.instTo}`;
+            if (item.totalInstallments) instLabel += ` / ${item.totalInstallments}`;
           }
 
+          const cancelled = !!item.cancelled;
           const tr = document.createElement("tr");
-          tr.className = "hover:bg-gray-50 transition";
+          tr.className = "hover:bg-gray-50 transition" + (cancelled ? " opacity-60" : "");
           tr.innerHTML = `
-            <td class="p-2.5 text-gray-600 font-medium whitespace-nowrap align-top">${dateStr}</td>
-            <td class="p-2.5 text-gray-700 align-top">
-              <span class="font-semibold">${item.note || 'কিস্তি জমা'}</span>
-              ${item.savingsAmount ? `<span class="text-[11px] text-teal-700 block">+ সঞ্চয় জমা ${Number(item.savingsAmount).toLocaleString('en-IN')} ৳</span>` : ''}
-              <span class="text-[10px] text-gray-400 block">${item.collectedByName || 'অফিসার'} কর্তৃক গৃহীত</span>
+            <td class="p-2.5 text-gray-600 font-medium align-top">
+              <span class="block whitespace-nowrap">${esc(dateStr)}</span>
+              ${dayName ? `<span class="block text-[10px] text-gray-400">${esc(dayName)} • ${esc(timeText)}</span>` : ''}
             </td>
-            <td class="p-2.5 text-right font-black text-emerald-700 whitespace-nowrap align-top">${(item.amount || 0).toLocaleString('en-IN')} ৳</td>
+            <td class="p-2.5 text-gray-700 align-top">
+              <span class="font-semibold ${cancelled ? 'line-through' : ''}">${esc(item.note || 'কিস্তি জমা')}</span>
+              ${cancelled ? `<span class="text-[11px] text-rose-600 font-bold block">বাতিল করা হয়েছে</span>` : ''}
+              ${instLabel ? `<span class="text-[11px] text-blue-700 font-semibold block">${esc(instLabel)}${Number(item.advanceCount) > 0 ? ` (অগ্রিম ${item.advanceCount} টি)` : ''}</span>` : ''}
+              ${item.balanceAfter !== undefined ? `<span class="text-[10px] text-gray-500 block">আদায়ের পর বাকি: ${Number(item.balanceAfter).toLocaleString('en-IN')} ৳</span>` : ''}
+              ${!cancelled && item.savingsAmount ? `<span class="text-[11px] text-teal-700 block">+ সঞ্চয় জমা ${Number(item.savingsAmount).toLocaleString('en-IN')} ৳</span>` : ''}
+              <span class="text-[10px] text-gray-400 block">${esc(item.collectedByName || 'অফিসার')} কর্তৃক গৃহীত</span>
+            </td>
+            <td class="p-2.5 text-right font-black text-emerald-700 whitespace-nowrap align-top ${cancelled ? 'line-through' : ''}">${(item.amount || 0).toLocaleString('en-IN')} ৳</td>
           `;
           tbody.appendChild(tr);
         });

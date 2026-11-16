@@ -41,32 +41,55 @@
     </div>
     <div class="px-4 pb-3 flex gap-2 overflow-x-auto no-scrollbar">
       <button onclick="window.history.back()" class="shrink-0 text-sm bg-gray-100 active:bg-gray-300 px-4 py-2.5 rounded-xl text-gray-700 font-medium">← ফিরে যান</button>
-      <a href="defaulters.html" class="shrink-0 text-sm bg-rose-50 text-rose-600 hover:bg-rose-100 px-4 py-2.5 rounded-xl font-medium">
-        বকেয়া / খেলাপী তালিকা ⚠️
-      </a>
+      <a href="report.html" class="shrink-0 text-sm bg-amber-50 text-amber-700 hover:bg-amber-100 px-4 py-2.5 rounded-xl font-medium">আদায় রিপোর্ট 🧾</a>
+      <a href="defaulters.html" class="shrink-0 text-sm bg-rose-50 text-rose-600 hover:bg-rose-100 px-4 py-2.5 rounded-xl font-medium">বকেয়া / খেলাপী তালিকা ⚠️</a>
     </div>
   </nav>
 
   <div class="max-w-5xl mx-auto p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
 
-    <!-- তারিখ নির্বাচন ও শিডিউল বার -->
-    <div class="bg-white rounded-2xl shadow-sm border p-4 md:p-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
-      <div>
-        <h2 class="text-base md:text-lg font-bold text-gray-800">কিস্তি আদায়ের নির্ধারিত তালিকা</h2>
-        <p class="text-xs text-gray-500">তারিখ পরিবর্তন করে যেকোনো দিনের শিডিউল দেখতে পারেন</p>
+    <!-- তারিখ, সার্চ ও ফিল্টার -->
+    <div class="bg-white rounded-2xl shadow-sm border p-4 md:p-6 space-y-3">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">
+        <div>
+          <h2 class="text-base md:text-lg font-bold text-gray-800">কিস্তি আদায়ের তালিকা</h2>
+          <p class="text-xs text-gray-500">নির্ধারিত তারিখের কিস্তি ও আগের বকেয়া — দুটোই এখানে আসে। নাম লিখে খুঁজলে যেকোনো সক্রিয় গ্রাহক পাবেন।</p>
+        </div>
+        <div class="flex flex-col gap-1 w-full sm:w-auto">
+          <label for="scheduleDate" class="text-xs font-semibold text-gray-600">তারিখ নির্বাচন</label>
+          <input type="date" id="scheduleDate" class="w-full border rounded-xl px-3 py-3 font-semibold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+        </div>
       </div>
 
-      <div class="flex flex-col gap-1 w-full sm:w-auto">
-        <label for="scheduleDate" class="text-xs font-semibold text-gray-600">তারিখ নির্বাচন</label>
-        <input type="date" id="scheduleDate" class="w-full border rounded-xl px-3 py-3 font-semibold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+      <input type="text" id="searchBox" placeholder="🔍 নাম বা মোবাইল দিয়ে খুঁজুন..." class="w-full border rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-emerald-500">
+
+      <div class="flex gap-2 overflow-x-auto no-scrollbar text-sm">
+        <button id="chip-all" onclick="setMode('all')" class="chip shrink-0 px-4 py-2 rounded-xl font-bold bg-emerald-600 text-white">সব</button>
+        <button id="chip-today" onclick="setMode('today')" class="chip shrink-0 px-4 py-2 rounded-xl font-medium bg-gray-100 text-gray-700">শুধু আজকের</button>
+        <button id="chip-overdue" onclick="setMode('overdue')" class="chip shrink-0 px-4 py-2 rounded-xl font-medium bg-gray-100 text-gray-700">শুধু বকেয়া</button>
       </div>
     </div>
 
-    <!-- নির্বাচিত তারিখের কিস্তি শিডিউল তালিকা -->
+    <!-- সারসংক্ষেপ -->
+    <div class="grid grid-cols-3 gap-2.5">
+      <div class="bg-white border rounded-2xl p-3 text-center">
+        <p class="text-[11px] font-semibold text-gray-500">মোট</p>
+        <p id="dueTotalCount" class="text-lg font-bold text-gray-800">০ জন</p>
+      </div>
+      <div class="bg-rose-50 border border-rose-200 rounded-2xl p-3 text-center">
+        <p class="text-[11px] font-semibold text-rose-600">বকেয়া</p>
+        <p id="dueOverdueCount" class="text-lg font-bold text-rose-600">০ জন</p>
+      </div>
+      <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-center">
+        <p class="text-[11px] font-semibold text-emerald-700">আদায়ের লক্ষ্য</p>
+        <p id="dueTargetSum" class="text-lg font-bold text-emerald-700">০ ৳</p>
+      </div>
+    </div>
+
+    <!-- তালিকা -->
     <div class="md:bg-white md:rounded-2xl md:shadow-sm md:border md:p-6">
       <div class="flex justify-between items-center mb-3 md:mb-4 md:pb-2 md:border-b px-1 md:px-0">
         <h3 class="text-sm font-bold text-gray-800" id="tableHeaderTitle">আজকের কিস্তির তালিকা</h3>
-        <span id="dueTotalCount" class="text-xs bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full">০ জন</span>
       </div>
 
       <table class="rtable w-full text-left text-sm">
@@ -74,20 +97,21 @@
           <tr>
             <th class="p-3">গ্রাহকের নাম</th>
             <th class="p-3">মোবাইল</th>
-            <th class="p-3">বর্তমান বাকি</th>
-            <th class="p-3">কিস্তির পরিমাণ</th>
+            <th class="p-3">অবস্থা</th>
+            <th class="p-3">মোট বাকি</th>
+            <th class="p-3">এই কিস্তি</th>
             <th class="p-3 text-center">অ্যাকশন</th>
           </tr>
         </thead>
         <tbody id="scheduleTableBody" class="md:divide-y md:divide-gray-100">
-          <tr><td colspan="5" class="full p-4 text-center text-gray-400">লোড হচ্ছে...</td></tr>
+          <tr><td colspan="6" class="full p-4 text-center text-gray-400">লোড হচ্ছে...</td></tr>
         </tbody>
       </table>
     </div>
 
   </div>
 
-  <!-- টাকা আদায়ের পপ-আপ মডাল (মোবাইলে নিচ থেকে ওঠে) -->
+  <!-- টাকা আদায়ের পপ-আপ মডাল -->
   <div id="collectModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4 z-50">
     <div class="bg-white max-w-md w-full max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:rounded-2xl shadow-2xl border" style="padding-bottom: env(safe-area-inset-bottom)">
       <div class="bg-emerald-600 px-5 py-4 text-white flex justify-between items-center sticky top-0">
@@ -98,12 +122,16 @@
         <div class="bg-gray-50 p-3.5 rounded-xl border text-sm space-y-1.5">
           <div class="flex justify-between"><span>বর্তমান বকেয়া:</span> <b id="modalRemaining" class="text-rose-600">০ ৳</b></div>
           <div class="flex justify-between"><span>নির্ধারিত কিস্তি:</span> <b id="modalPerInst" class="text-blue-600">০ ৳</b></div>
+          <div id="modalPartialRow" class="hidden flex justify-between"><span>এই কিস্তিতে আগে জমা:</span> <b id="modalPartial" class="text-amber-600">০ ৳</b></div>
           <div class="flex justify-between"><span>এ পর্যন্ত জমানো সঞ্চয়:</span> <b id="modalSavings" class="text-teal-700">০ ৳</b></div>
         </div>
+
+        <div id="modalWarn" class="hidden rounded-xl p-3 text-sm font-semibold bg-amber-50 border border-amber-300 text-amber-800 space-y-1"></div>
 
         <div>
           <label for="modalPayAmount" class="block text-xs font-semibold text-gray-600 mb-1">আদায়কৃত টাকা</label>
           <input type="number" id="modalPayAmount" required min="1" inputmode="numeric" class="w-full border rounded-xl px-3.5 py-3 font-bold text-emerald-700 text-xl outline-none focus:ring-2 focus:ring-emerald-500">
+          <p id="modalHint" class="text-[12px] mt-1.5 font-medium text-gray-500"></p>
         </div>
 
         <div>
@@ -135,96 +163,207 @@
     document.getElementById("collectorName").innerText = localStorage.getItem("userName") || "অফিসার";
     document.getElementById("logoutBtn").addEventListener("click", handleLogout);
 
-    const datePicker = document.getElementById("scheduleDate");
-    const todayStr = new Date().toISOString().split('T')[0];
-    datePicker.value = todayStr; // ডিফল্ট আজকের তারিখ
+    // ---------- হেল্পার ----------
+    const esc = (t) => String(t ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const bn = (n) => Number(n || 0).toLocaleString('bn-BD');
+    const round2 = (n) => Math.round(Number(n) * 100) / 100;
+    const normalizeDigits = (str) => String(str ?? '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)).toLowerCase().trim();
 
-    let currentScheduleLoans = [];
-    let selectedLoanForPay = null;
-
-    // পরবর্তী কিস্তির তারিখ বের করার ফাংশন
-    function getNextDate(currentDateStr, frequency) {
-      const d = new Date(currentDateStr);
-      if (frequency === 'daily') d.setDate(d.getDate() + 1);
-      else if (frequency === 'monthly') d.setMonth(d.getMonth() + 1);
-      else d.setDate(d.getDate() + 7); // weekly default
-      return d.toISOString().split('T')[0];
+    // স্থানীয় তারিখ (UTC নয়, তাই রাত ১২টা–ভোর ৬টায়ও সঠিক দিন আসবে)
+    function localDateStr(d = new Date()) {
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function parseYMD(s) { const [y, m, d] = String(s).split('-').map(Number); return { y, m, d }; }
+    function addPeriods(dateStr, frequency, n) {
+      const { y, m, d } = parseYMD(dateStr);
+      if (frequency === 'monthly') {
+        const total = (m - 1) + n;
+        const ny = y + Math.floor(total / 12);
+        const nm = ((total % 12) + 12) % 12;
+        const dim = new Date(ny, nm + 1, 0).getDate();
+        return localDateStr(new Date(ny, nm, Math.min(d, dim)));
+      }
+      const step = frequency === 'daily' ? 1 : 7;
+      return localDateStr(new Date(y, m - 1, d + step * n));
+    }
+    function daysBetween(a, b) { // b - a (দিন)
+      const A = parseYMD(a), B = parseYMD(b);
+      return Math.round((new Date(B.y, B.m - 1, B.d) - new Date(A.y, A.m - 1, A.d)) / 86400000);
     }
 
-    // তালিকা লোড ফাংশন
-    function loadSchedule(dateStr) {
-      document.getElementById("tableHeaderTitle").innerText = `${dateStr === todayStr ? 'আজকের' : dateStr} কিস্তির আদায় তালিকা`;
+    // ---------- স্টেট ----------
+    const datePicker = document.getElementById("scheduleDate");
+    const searchBox = document.getElementById("searchBox");
+    const todayStr = localDateStr();
+    datePicker.value = todayStr;
 
-      // নির্বাচিত তারিখ ও সক্রিয় লোন কুয়েরি
-      const q = query(
-        collection(db, "loans"),
-        where("status", "==", "active"),
-        where("nextDueDate", "==", dateStr)
-      );
+    const qParam = new URLSearchParams(window.location.search).get('q');
+    if (qParam) searchBox.value = qParam;
 
-      onSnapshot(q, (snapshot) => {
-        const tbody = document.getElementById("scheduleTableBody");
-        tbody.innerHTML = "";
-        currentScheduleLoans = [];
+    let allActive = [];
+    let mode = 'all';
+    let selectedLoanForPay = null;
 
-        document.getElementById("dueTotalCount").innerText = `${snapshot.size} জন`;
+    // এই কিস্তি চক্রে কত টাকা বাকি
+    function cycleDue(l) {
+      const per = Number(l.perInstallment || 0);
+      const credit = Number(l.partialCredit || 0);
+      const rem = Number(l.remainingAmount || 0);
+      const need = per - credit;
+      return Math.min(rem, need > 0 ? need : per);
+    }
 
-        if (snapshot.empty) {
-          tbody.innerHTML = `<tr><td colspan="5" class="full p-6 text-center text-gray-400">এই তারিখে কোনো কিস্তির শিডিউল নেই।</td></tr>`;
-          return;
+    window.setMode = (m) => {
+      mode = m;
+      document.querySelectorAll('.chip').forEach(b => b.className = "chip shrink-0 px-4 py-2 rounded-xl font-medium bg-gray-100 text-gray-700");
+      document.getElementById('chip-' + m).className = "chip shrink-0 px-4 py-2 rounded-xl font-bold bg-emerald-600 text-white";
+      render();
+    };
+
+    function render() {
+      const date = datePicker.value || todayStr;
+      const rawQ = searchBox.value.trim();
+      const q = normalizeDigits(rawQ);
+
+      document.getElementById("tableHeaderTitle").innerText =
+        rawQ ? `খোঁজার ফলাফল` : `${date === todayStr ? 'আজকের' : date} কিস্তির আদায় তালিকা`;
+
+      // যাদের কিস্তির সময় হয়েছে বা পার হয়েছে
+      const dueRows = allActive.filter(l => l.nextDueDate && l.nextDueDate <= date);
+      document.getElementById("dueOverdueCount").innerText = bn(dueRows.filter(l => l.nextDueDate < date).length) + " জন";
+      document.getElementById("dueTargetSum").innerText = bn(dueRows.reduce((s, l) => s + cycleDue(l), 0)) + " ৳";
+
+      let rows = rawQ ? allActive : dueRows;
+      if (rawQ) {
+        rows = rows.filter(l => String(l.name || '').toLowerCase().includes(rawQ.toLowerCase()) || normalizeDigits(l.phone).includes(q));
+      }
+      if (mode === 'today') rows = rows.filter(l => l.nextDueDate === date);
+      if (mode === 'overdue') rows = rows.filter(l => l.nextDueDate && l.nextDueDate < date);
+
+      rows = rows.slice().sort((a, b) => String(a.nextDueDate || '9999').localeCompare(String(b.nextDueDate || '9999')) || String(a.name || '').localeCompare(String(b.name || '')));
+
+      document.getElementById("dueTotalCount").innerText = bn(rows.length) + " জন";
+
+      const tbody = document.getElementById("scheduleTableBody");
+      tbody.innerHTML = "";
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="full p-6 text-center text-gray-400">${rawQ ? 'কোনো গ্রাহক পাওয়া যায়নি।' : 'এই তারিখে কোনো কিস্তি বা বকেয়া নেই।'}</td></tr>`;
+        return;
+      }
+
+      rows.forEach((item) => {
+        let badge;
+        if (!item.nextDueDate) {
+          badge = `<span class="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full font-bold">তারিখ নেই</span>`;
+        } else if (item.nextDueDate === date) {
+          badge = `<span class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-bold">আজকের কিস্তি</span>`;
+        } else if (item.nextDueDate < date) {
+          badge = `<span class="bg-rose-100 text-rose-700 text-xs px-2.5 py-1 rounded-full font-bold">${bn(daysBetween(item.nextDueDate, date))} দিন বকেয়া</span>`;
+        } else {
+          badge = `<span class="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full font-bold">পরের: ${esc(item.nextDueDate)}</span>`;
         }
-
-        snapshot.forEach((docSnap) => {
-          const item = { id: docSnap.id, ...docSnap.data() };
-          currentScheduleLoans.push(item);
-
-          const tr = document.createElement("tr");
-          tr.className = "hover:bg-gray-50";
-          tr.innerHTML = `
-            <td class="title p-3 font-semibold text-gray-800">${item.name}</td>
-            <td data-label="মোবাইল" class="p-3 text-gray-600"><a href="tel:${item.phone}" class="underline decoration-dotted">${item.phone}</a></td>
-            <td data-label="বর্তমান বাকি" class="p-3 font-bold text-rose-600">${item.remainingAmount.toLocaleString('bn-BD')} ৳</td>
-            <td data-label="কিস্তির পরিমাণ" class="p-3 font-bold text-blue-600">${item.perInstallment.toLocaleString('bn-BD')} ৳</td>
-            <td class="act p-3 text-center">
-              <button onclick="openPayModal('${item.id}')" 
-                      class="bg-emerald-600 active:bg-emerald-800 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-3 md:py-2 rounded-xl shadow">
-                আদায় করুন
-              </button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
+        const credit = Number(item.partialCredit || 0);
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-gray-50";
+        tr.innerHTML = `
+          <td class="title p-3 font-semibold text-gray-800">${esc(item.name)}</td>
+          <td data-label="মোবাইল" class="p-3 text-gray-600"><a href="tel:${esc(item.phone)}" class="underline decoration-dotted">${esc(item.phone)}</a></td>
+          <td data-label="অবস্থা" class="p-3">${badge}</td>
+          <td data-label="মোট বাকি" class="p-3 font-bold text-rose-600">${bn(item.remainingAmount)} ৳</td>
+          <td data-label="এই কিস্তি" class="p-3 font-bold text-blue-600">${bn(cycleDue(item))} ৳${credit > 0 ? `<span class="block text-[10px] font-normal text-amber-600">আগে ${bn(credit)} ৳ জমা</span>` : ''}</td>
+          <td class="act p-3 text-center">
+            <button onclick="openPayModal('${esc(item.id)}')"
+                    class="bg-emerald-600 active:bg-emerald-800 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-3 md:py-2 rounded-xl shadow">
+              আদায় করুন
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
       });
     }
 
-    // তারিখ পরিবর্তন ইভেন্ট
-    datePicker.addEventListener("change", (e) => {
-      loadSchedule(e.target.value);
+    // একটাই লাইভ সংযোগ — সব সক্রিয় লোন
+    onSnapshot(query(collection(db, "loans"), where("status", "==", "active")), (snapshot) => {
+      allActive = [];
+      snapshot.forEach(d => allActive.push({ id: d.id, ...d.data() }));
+      render();
+    }, (err) => {
+      document.getElementById("scheduleTableBody").innerHTML =
+        `<tr><td colspan="6" class="full p-6 text-center text-rose-600">ডাটা আনতে সমস্যা: ${esc(err.message)}</td></tr>`;
     });
 
-    // শুরুতে আজকেরটা লোড হবে
-    loadSchedule(todayStr);
+    datePicker.addEventListener("change", render);
+    searchBox.addEventListener("input", render);
 
-    // মডাল হ্যান্ডলার
+    // ---------- মডাল ----------
+    // অগ্রিম / একই দিনে আবার নেওয়ার সতর্কতা
+    function loanWarnings(l) {
+      const warns = [];
+      let lp = null;
+      if (l.lastPaymentDate && typeof l.lastPaymentDate.toDate === 'function') lp = l.lastPaymentDate.toDate();
+      if (lp && localDateStr(lp) === todayStr) {
+        warns.push(`এই গ্রাহকের কাছ থেকে আজ ${lp.toLocaleTimeString('bn-BD', { hour: 'numeric', minute: '2-digit' })} এ ইতিমধ্যে কিস্তি নেওয়া হয়েছে।`);
+      }
+      if (l.nextDueDate && l.nextDueDate > todayStr) {
+        warns.push(`এই গ্রাহকের কিস্তি এখন নয়, পরের কিস্তি ${l.nextDueDate} তারিখে। এই টাকা অগ্রিম হিসেবে যাবে।`);
+      }
+      return warns;
+    }
+
     window.openPayModal = (loanId) => {
-      selectedLoanForPay = currentScheduleLoans.find(l => l.id === loanId);
+      selectedLoanForPay = allActive.find(l => l.id === loanId);
       if (!selectedLoanForPay) return;
+      const l = selectedLoanForPay;
 
-      document.getElementById("modalCustName").innerText = `${selectedLoanForPay.name} - কিস্তি গ্রহণ`;
-      document.getElementById("modalRemaining").innerText = `${selectedLoanForPay.remainingAmount} ৳`;
-      document.getElementById("modalPerInst").innerText = `${selectedLoanForPay.perInstallment} ৳`;
-      document.getElementById("modalPayAmount").value = selectedLoanForPay.perInstallment;
-      document.getElementById("modalSavings").innerText = `${Number(selectedLoanForPay.savingsBalance || 0)} ৳`;
+      document.getElementById("modalCustName").innerText = `${l.name} - কিস্তি গ্রহণ`;
+      document.getElementById("modalRemaining").innerText = `${bn(l.remainingAmount)} ৳`;
+      document.getElementById("modalPerInst").innerText = `${bn(l.perInstallment)} ৳`;
+      const credit = Number(l.partialCredit || 0);
+      document.getElementById("modalPartialRow").classList.toggle("hidden", credit <= 0);
+      document.getElementById("modalPartial").innerText = `${bn(credit)} ৳`;
+      document.getElementById("modalSavings").innerText = `${bn(l.savingsBalance || 0)} ৳`;
+      document.getElementById("modalPayAmount").value = cycleDue(l);
       document.getElementById("modalSavingsAmount").value = 100;
+      document.getElementById("modalPayNote").value = "";
+      const warnEl = document.getElementById("modalWarn");
+      const ws = loanWarnings(l);
+      warnEl.innerHTML = ws.map(w => `<p>⚠️ ${esc(w)}</p>`).join('');
+      warnEl.classList.toggle("hidden", ws.length === 0);
       updateModalTotal();
       document.getElementById("collectModal").classList.remove("hidden");
-      document.body.style.overflow = "hidden"; // পেছনের পেজ স্ক্রল বন্ধ
+      document.body.style.overflow = "hidden";
     };
 
     function updateModalTotal() {
       const a = Number(document.getElementById("modalPayAmount").value) || 0;
       const s = Number(document.getElementById("modalSavingsAmount").value) || 0;
-      document.getElementById("modalTotal").innerText = `${a + s} ৳`;
+      document.getElementById("modalTotal").innerText = `${bn(a + Math.max(0, s))} ৳`;
+
+      const hint = document.getElementById("modalHint");
+      const l = selectedLoanForPay;
+      if (!l) { hint.innerText = ""; return; }
+      const rem = Number(l.remainingAmount || 0);
+      const per = Number(l.perInstallment || 0);
+      const credit = Number(l.partialCredit || 0);
+      if (a <= 0) { hint.className = "text-[12px] mt-1.5 font-medium text-gray-500"; hint.innerText = ""; return; }
+      if (a > rem) {
+        hint.className = "text-[12px] mt-1.5 font-bold text-rose-600";
+        hint.innerText = `⚠️ বকেয়া ${bn(rem)} ৳ — এর বেশি নেওয়া যাবে না`;
+      } else if (round2(a - rem) === 0) {
+        hint.className = "text-[12px] mt-1.5 font-bold text-emerald-700";
+        hint.innerText = "✅ এই টাকায় পুরো লোন শোধ হয়ে যাবে";
+      } else {
+        const total = credit + a;
+        const covered = per > 0 ? Math.floor(total / per) : 1;
+        const rest = per > 0 ? total - covered * per : 0;
+        if (covered >= 1) {
+          hint.className = "text-[12px] mt-1.5 font-medium text-emerald-700";
+          hint.innerText = `✅ ${bn(covered)} টি কিস্তি পূর্ণ হবে` + (rest > 0 ? `, ${bn(rest)} ৳ পরের কিস্তিতে জমা থাকবে` : '');
+        } else {
+          hint.className = "text-[12px] mt-1.5 font-medium text-amber-600";
+          hint.innerText = `⚠️ কিস্তি পূর্ণ হবে না — আরও ${bn(per - total)} ৳ বাকি থাকবে, গ্রাহক তালিকায় থেকে যাবে`;
+        }
+      }
     }
     document.getElementById("modalPayAmount").addEventListener("input", updateModalTotal);
     document.getElementById("modalSavingsAmount").addEventListener("input", updateModalTotal);
@@ -235,71 +374,143 @@
       selectedLoanForPay = null;
     };
 
-    // মডালের বাইরে ট্যাপ করলে বন্ধ হবে
     document.getElementById("collectModal").addEventListener("click", (e) => {
       if (e.target.id === "collectModal") closeModal();
     });
 
-    // কিস্তি সাবমিট এবং পরবর্তী তারিখ শিডিউল করা
+    // ---------- কিস্তি সাবমিট ----------
     document.getElementById("modalPayForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const amount = Number(document.getElementById("modalPayAmount").value);
-      const note = document.getElementById("modalPayNote").value.trim();
-      const savings = Math.max(0, Number(document.getElementById("modalSavingsAmount").value) || 0);
+      const loan = selectedLoanForPay;
+      if (!loan) return;
 
-      if (!selectedLoanForPay || amount <= 0) return;
+      const amount = Number(document.getElementById("modalPayAmount").value);
+      const savings = Math.max(0, Number(document.getElementById("modalSavingsAmount").value) || 0);
+      const note = document.getElementById("modalPayNote").value.trim();
+
+      if (!Number.isFinite(amount) || amount <= 0) { alert("সঠিক টাকার পরিমাণ লিখুন।"); return; }
+      if (amount > Number(loan.remainingAmount || 0)) { alert(`বকেয়া ${loan.remainingAmount} ৳ — এর বেশি নেওয়া যাবে না।`); return; }
+
+      const warnText = loanWarnings(loan).map(w => "⚠️ " + w).join("\n");
+      const ok = confirm(`${loan.name}\nকিস্তি: ${amount} ৳\nসঞ্চয়: ${savings} ৳\nমোট গ্রহণ: ${amount + savings} ৳\n` + (warnText ? `\n${warnText}\n` : "") + `\nসঠিক হলে OK চাপুন।`);
+      if (!ok) return;
 
       const submitBtn = document.getElementById("modalSubmitBtn");
       submitBtn.disabled = true;
       submitBtn.innerText = "প্রসেসিং...";
 
       try {
-        const loanRef = doc(db, "loans", selectedLoanForPay.id);
+        const loanRef = doc(db, "loans", loan.id);
         const colRef = doc(collection(db, "collections"));
+        const histRef = doc(db, "loans", loan.id, "history", colRef.id);
+        const collectorUid = localStorage.getItem("userUid");
+        const collectorName = localStorage.getItem("userName") || "অফিসার";
 
         await runTransaction(db, async (t) => {
           const lDoc = await t.get(loanRef);
-          if (!lDoc.exists()) throw "লোন তথ্য নেই!";
-
+          if (!lDoc.exists()) throw new Error("লোন তথ্য নেই!");
           const d = lDoc.data();
-          const newPaid = Number(d.paidAmount || 0) + amount;
-          const newRemaining = Number(d.remainingAmount) - amount;
+          if (d.status !== "active") throw new Error("এই লোনটি এখন সক্রিয় নেই।");
+
+          const remaining = Number(d.remainingAmount || 0);
+          if (amount > remaining) throw new Error(`বকেয়া ${remaining} ৳ — এর বেশি নেওয়া যাবে না।`);
+
+          const per = Number(d.perInstallment || 0);
+          const prevCredit = Number(d.partialCredit || 0);
+          const newPaid = round2(Number(d.paidAmount || 0) + amount);
+          const newRemaining = round2(remaining - amount);
           const isDone = newRemaining <= 0;
 
-          // পরবর্তী কিস্তির তারিখ হিসেব (যেমন ৭ দিন বা ১ দিন যোগ)
-          const nextDate = isDone ? "" : getNextDate(d.nextDueDate || todayStr, d.frequency || 'weekly');
+          // কিস্তি কতটি পূর্ণ হলো — কম দিলে তারিখ এগোবে না, বেশি দিলে একাধিক কিস্তি এগোবে
+          let covered = 0, newCredit = 0;
+          if (!isDone) {
+            const total = prevCredit + amount;
+            covered = per > 0 ? Math.floor(total / per) : 1;
+            newCredit = per > 0 ? round2(total - covered * per) : 0;
+          }
+          const baseDate = d.nextDueDate || todayStr;
+          const nextDate = isDone ? "" : (covered > 0 ? addPeriods(baseDate, d.frequency || "weekly", covered) : baseDate);
+
+          // কিস্তি নম্বর ও অগ্রিম হিসাব
+          const instTotal = Number(d.installments || 0);
+          const doneBefore = d.installmentsDone !== undefined
+            ? Number(d.installmentsDone)
+            : (per > 0 ? Math.min(instTotal || Infinity, Math.floor(Number(d.paidAmount || 0) / per)) : 0);
+          const coveredCount = isDone ? Math.max(0, (instTotal || doneBefore) - doneBefore) : covered;
+          const doneAfter = instTotal > 0 ? Math.min(instTotal, doneBefore + coveredCount) : doneBefore + coveredCount;
+          const instFrom = coveredCount > 0 ? doneBefore + 1 : 0;
+          const instTo = coveredCount > 0 ? doneAfter : 0;
+          let advanceCount = 0;
+          for (let k = 0; k < coveredCount; k++) {
+            if (addPeriods(baseDate, d.frequency || "weekly", k) > todayStr) advanceCount++;
+          }
 
           t.update(loanRef, {
             paidAmount: newPaid,
             remainingAmount: newRemaining,
-            savingsBalance: Number(d.savingsBalance || 0) + savings,
+            savingsBalance: round2(Number(d.savingsBalance || 0) + savings),
             status: isDone ? "completed" : "active",
             nextDueDate: nextDate,
+            partialCredit: newCredit,
+            installmentsDone: doneAfter,
+            lastCollectionId: colRef.id,
             lastPaymentDate: new Date()
           });
 
           t.set(colRef, {
-            loanId: selectedLoanForPay.id,
+            loanId: loan.id,
             customerName: d.name,
             customerPhone: d.phone,
             amount: amount,
             savingsAmount: savings,
             note: note || "নিয়মিত কিস্তি আদায়",
-            collectedByUid: localStorage.getItem("userUid"),
-            collectedByName: localStorage.getItem("userName") || "অফিসার",
-            timestamp: serverTimestamp()
+            collectedByUid: collectorUid,
+            collectedByName: collectorName,
+            timestamp: serverTimestamp(),
+            dateKey: todayStr,
+            balanceAfter: newRemaining,
+            periodsAdvanced: covered,
+            instFrom: instFrom,
+            instTo: instTo,
+            totalInstallments: instTotal,
+            advanceCount: advanceCount,
+            prevInstallmentsDone: doneBefore,
+            // বাতিল করার সময় আগের অবস্থায় ফেরাতে এগুলো লাগবে
+            prevNextDueDate: d.nextDueDate || "",
+            prevPartialCredit: prevCredit,
+            prevStatus: d.status,
+            prevLastCollectionId: d.lastCollectionId || "",
+            cancelled: false
+          });
+
+          // গ্রাহকের পাসবুকের জন্য (কিউআর স্ক্যানে দেখা যায়)
+          t.set(histRef, {
+            loanId: loan.id,
+            amount: amount,
+            savingsAmount: savings,
+            note: note || "নিয়মিত কিস্তি আদায়",
+            collectedByName: collectorName,
+            timestamp: serverTimestamp(),
+            balanceAfter: newRemaining,
+            instFrom: instFrom,
+            instTo: instTo,
+            totalInstallments: instTotal,
+            advanceCount: advanceCount,
+            cancelled: false
           });
         });
 
         alert(`সফলভাবে জমা হয়েছে: কিস্তি ${amount} ৳` + (savings > 0 ? ` + সঞ্চয় ${savings} ৳` : ""));
         closeModal();
       } catch (err) {
-        alert("ভুল হয়েছে: " + err);
+        alert("ভুল হয়েছে: " + (err && err.message ? err.message : err));
       } finally {
         submitBtn.disabled = false;
         submitBtn.innerText = "জমা নিশ্চিত করুন";
       }
     });
+
+    render();
   </script>
 </body>
 </html>

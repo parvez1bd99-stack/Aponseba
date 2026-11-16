@@ -109,6 +109,24 @@
           <span class="bg-white/25 px-3 py-1.5 rounded-xl text-xs font-bold tracking-wide shrink-0">যান →</span>
         </a>
 
+        <!-- আজকের আদায় কার্ড -->
+        <a href="report.html" class="col-span-2 bg-white active:scale-[0.99] border border-emerald-200 rounded-2xl p-4 shadow-sm transition">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl shrink-0">🧾</div>
+              <div class="min-w-0">
+                <h3 class="font-bold text-slate-800 text-base leading-tight">আমার আজকের আদায়</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5"><span id="todayCount">০</span> জনের কাছ থেকে • তালিকা দেখুন →</p>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <p id="todayTotal" class="text-lg font-bold text-emerald-700">০ ৳</p>
+              <p id="todaySplit" class="text-[10px] text-slate-400">কিস্তি ০ + সঞ্চয় ০</p>
+            </div>
+          </div>
+          <p id="todayHandover" class="hidden mt-2.5 text-[11px] font-bold rounded-lg px-2.5 py-1.5"></p>
+        </a>
+
       </div>
 
     </div>
@@ -251,7 +269,7 @@
 
   <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script type="module">
-    import { db, checkAccess, handleLogout, collection, addDoc, query, where, onSnapshot, serverTimestamp } from "./firebase-config.js";
+    import { db, checkAccess, handleLogout, collection, addDoc, query, where, onSnapshot, doc, serverTimestamp } from "./firebase-config.js";
 
     checkAccess();
 
@@ -259,6 +277,9 @@
     document.getElementById("logoutBtn").addEventListener("click", handleLogout);
 
     const officerUid = localStorage.getItem("userUid");
+
+    const esc = (t) => String(t ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const localDateStr = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
     // বাংলা সংখ্যাকে ইংরেজি সংখ্যায় রূপান্তরের হেল্পার (সার্চের জন্য)
     function normalizeDigits(str) {
@@ -505,13 +526,13 @@
           <div class="flex items-start justify-between gap-2.5">
             <div class="flex items-center gap-3 min-w-0">
               ${loan.photo 
-                ? `<img src="${loan.photo}" alt="" class="w-11 h-11 rounded-xl object-cover border border-slate-200 shrink-0">` 
+                ? `<img src="${esc(loan.photo)}" alt="" class="w-11 h-11 rounded-xl object-cover border border-slate-200 shrink-0">` 
                 : `<div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg border border-emerald-100 shrink-0">👤</div>`}
               <div class="min-w-0">
-                <h4 class="font-bold text-slate-800 text-sm leading-tight truncate">${loan.name}</h4>
+                <h4 class="font-bold text-slate-800 text-sm leading-tight truncate">${esc(loan.name)}</h4>
                 <div class="flex items-center gap-2 mt-1">
-                  <a href="tel:${loan.phone}" class="text-xs text-emerald-700 font-semibold hover:underline flex items-center gap-1">
-                    📞 ${loan.phone}
+                  <a href="tel:${esc(loan.phone)}" class="text-xs text-emerald-700 font-semibold hover:underline flex items-center gap-1">
+                    📞 ${esc(loan.phone)}
                   </a>
                 </div>
               </div>
@@ -523,7 +544,7 @@
           ${loan.nid ? `
             <div class="bg-slate-50 px-2.5 py-1 rounded-lg text-[11px] text-slate-500 font-mono flex items-center justify-between">
               <span>NID:</span>
-              <span class="font-semibold text-slate-700">${loan.nid}</span>
+              <span class="font-semibold text-slate-700">${esc(loan.nid)}</span>
             </div>
           ` : ''}
 
@@ -543,10 +564,10 @@
           <div class="pt-0.5">
             ${loan.status === 'active' || loan.status === 'completed' ? `
               <div class="grid grid-cols-2 gap-2">
-                <a href="card.html?id=${loan.id}" target="_blank" class="text-center bg-emerald-600 active:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-sm">
+                <a href="card.html?id=${esc(loan.id)}" target="_blank" class="text-center bg-emerald-600 active:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-sm">
                   আইডি কার্ড ↗
                 </a>
-                <a href="passbook.html?id=${loan.id}" target="_blank" class="text-center bg-emerald-50 active:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs py-2.5 rounded-xl transition">
+                <a href="passbook.html?id=${esc(loan.id)}" target="_blank" class="text-center bg-emerald-50 active:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs py-2.5 rounded-xl transition">
                   পাসবুক ↗
                 </a>
               </div>
@@ -595,6 +616,58 @@
       // কার্ড লিস্ট পুনরায় ড্র করা
       renderLoanCards();
     });
+
+    // ================= আজকের আদায় (ড্যাশবোর্ড কার্ড) =================
+    (function () {
+      const bnNum = (n) => Number(n || 0).toLocaleString('bn-BD');
+      let total = 0, inst = 0, sav = 0, count = 0;
+      let handover = null;
+
+      function paint() {
+        document.getElementById("todayCount").innerText = bnNum(count);
+        document.getElementById("todayTotal").innerText = bnNum(total) + " ৳";
+        document.getElementById("todaySplit").innerText = "কিস্তি " + bnNum(inst) + " + সঞ্চয় " + bnNum(sav);
+
+        const el = document.getElementById("todayHandover");
+        if (count === 0 && !handover) { el.classList.add("hidden"); return; }
+        el.classList.remove("hidden");
+        if (!handover) {
+          el.className = "mt-2.5 text-[11px] font-bold rounded-lg px-2.5 py-1.5 bg-amber-50 text-amber-700";
+          el.innerText = "⏳ মালিক এখনো টাকা বুঝে নেননি";
+        } else {
+          const diff = Math.round((Number(handover.received) - total) * 100) / 100;
+          const stale = Number(handover.expected) !== total;
+          el.className = "mt-2.5 text-[11px] font-bold rounded-lg px-2.5 py-1.5 " + ((stale || diff !== 0) ? "bg-orange-50 text-orange-700" : "bg-emerald-50 text-emerald-700");
+          el.innerText = stale ? "⚠️ বুঝে নেওয়ার পর হিসাব বদলেছে" : (diff === 0 ? "✓ মালিক টাকা বুঝে নিয়েছেন" : (diff < 0 ? "ঘাটতি " + bnNum(-diff) + " ৳" : bnNum(diff) + " ৳ বেশি"));
+        }
+      }
+
+      const colQ = query(collection(db, "collections"), where("collectedByUid", "==", officerUid));
+      onSnapshot(colQ, (snap) => {
+        const now = new Date();
+        const startDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+        inst = 0; sav = 0; count = 0;
+        snap.forEach((d) => {
+          const x = d.data();
+          if (x.cancelled) return;
+          const ts = x.timestamp ? x.timestamp.toDate() : new Date();
+          if (ts >= startDay && ts <= endDay) {
+            inst += Number(x.amount || 0);
+            sav += Number(x.savingsAmount || 0);
+            count++;
+          }
+        });
+        total = Math.round((inst + sav) * 100) / 100;
+        paint();
+      });
+
+      onSnapshot(doc(db, "handovers", localDateStr() + "_" + officerUid), (snap) => {
+        handover = snap.exists() ? snap.data() : null;
+        paint();
+      }, (err) => console.error("handover", err));
+    })();
   </script>
 </body>
 </html>

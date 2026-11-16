@@ -1,7 +1,7 @@
 // firebase-config.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, query, where, onSnapshot, getDocs, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, query, where, onSnapshot, getDocs, setDoc, writeBatch, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 // ফায়ারবেস কনফিগারেশন (আপনার প্রজেক্টের আসল তথ্য)
 const firebaseConfig = {
@@ -77,6 +77,8 @@ export {
   where, 
   onSnapshot, 
   getDocs, 
+  setDoc, 
+  writeBatch, 
   runTransaction, 
   serverTimestamp 
 };
