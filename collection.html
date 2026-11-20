@@ -283,7 +283,9 @@
     }
 
     // একটাই লাইভ সংযোগ — সব সক্রিয় লোন
-    onSnapshot(query(collection(db, "loans"), where("status", "==", "active")), (snapshot) => {
+    onSnapshot((localStorage.getItem("userRole") === "owner"
+      ? query(collection(db, "loans"), where("status", "==", "active"))
+      : query(collection(db, "loans"), where("status", "==", "active"), where("appliedByUid", "==", localStorage.getItem("userUid") || "none"))), (snapshot) => {
       allActive = [];
       snapshot.forEach(d => allActive.push({ id: d.id, ...d.data() }));
       render();

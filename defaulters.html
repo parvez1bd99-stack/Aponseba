@@ -110,7 +110,9 @@
     const ymd = (s) => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, m - 1, d); };
 
     // সক্রিয় সব লোন পর্যবেক্ষণ
-    const q = query(collection(db, "loans"), where("status", "==", "active"));
+    const q = (localStorage.getItem("userRole") === "owner"
+      ? query(collection(db, "loans"), where("status", "==", "active"))
+      : query(collection(db, "loans"), where("status", "==", "active"), where("appliedByUid", "==", localStorage.getItem("userUid") || "none")));
 
     onSnapshot(q, (snapshot) => {
       const tbody = document.getElementById("defaulterTableBody");

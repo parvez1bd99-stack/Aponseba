@@ -56,15 +56,15 @@
       <div class="grid grid-cols-3 gap-2.5">
         <div class="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-sm text-center">
           <p class="text-[11px] font-semibold text-slate-500">মোট আবেদন</p>
-          <p id="statTotal" class="text-lg font-bold text-slate-800 mt-0.5">০</p>
+          <p id="statTotal" class="text-lg font-bold text-slate-800 mt-0.5">0</p>
         </div>
         <div class="bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200/60 shadow-sm text-center">
           <p class="text-[11px] font-semibold text-emerald-700">অনুমোদিত</p>
-          <p id="statApproved" class="text-lg font-bold text-emerald-600 mt-0.5">০</p>
+          <p id="statApproved" class="text-lg font-bold text-emerald-600 mt-0.5">0</p>
         </div>
         <div class="bg-amber-50/70 p-3 rounded-2xl border border-amber-200/60 shadow-sm text-center">
           <p class="text-[11px] font-semibold text-amber-700">অপেক্ষমাণ</p>
-          <p id="statPending" class="text-lg font-bold text-amber-600 mt-0.5">০</p>
+          <p id="statPending" class="text-lg font-bold text-amber-600 mt-0.5">0</p>
         </div>
       </div>
 
@@ -116,12 +116,12 @@
               <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl shrink-0">🧾</div>
               <div class="min-w-0">
                 <h3 class="font-bold text-slate-800 text-base leading-tight">আমার আজকের আদায়</h3>
-                <p class="text-[11px] text-slate-500 mt-0.5"><span id="todayCount">০</span> জনের কাছ থেকে • তালিকা দেখুন →</p>
+                <p class="text-[11px] text-slate-500 mt-0.5"><span id="todayCount">0</span> জনের কাছ থেকে • তালিকা দেখুন →</p>
               </div>
             </div>
             <div class="text-right shrink-0">
-              <p id="todayTotal" class="text-lg font-bold text-emerald-700">০ ৳</p>
-              <p id="todaySplit" class="text-[10px] text-slate-400">কিস্তি ০ + সঞ্চয় ০</p>
+              <p id="todayTotal" class="text-lg font-bold text-emerald-700">0 ৳</p>
+              <p id="todaySplit" class="text-[10px] text-slate-400">কিস্তি 0 + সঞ্চয় 0</p>
             </div>
           </div>
           <p id="todayHandover" class="hidden mt-2.5 text-[11px] font-bold rounded-lg px-2.5 py-1.5"></p>
@@ -154,7 +154,7 @@
               </div>
               <div>
                 <label for="custNid" class="block text-xs font-semibold text-slate-600 mb-1">জাতীয় পরিচয়পত্র (NID) *</label>
-                <input type="text" id="custNid" required placeholder="১০ বা ১৭ ডিজিটের NID" inputmode="numeric"
+                <input type="text" id="custNid" required placeholder="10 বা 17 ডিজিটের NID" inputmode="numeric"
                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition text-sm">
               </div>
             </div>
@@ -187,7 +187,7 @@
               <label for="admissionDeposit" class="block text-xs font-semibold text-slate-600 mb-1">ভর্তি জমা (টাকা) — ফেরতযোগ্য</label>
               <input type="number" id="admissionDeposit" min="0" placeholder="যেমন: 400" inputmode="numeric"
                      class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-semibold text-slate-800 transition text-sm">
-              <p id="depositHint" class="text-[11px] text-emerald-700 bg-emerald-50 p-2 rounded-lg mt-1 font-medium">লোনের পরিমাণ লিখলে ১% ও ২% এর হিসাব এখানে দেখাবে</p>
+              <p id="depositHint" class="text-[11px] text-emerald-700 bg-emerald-50 p-2 rounded-lg mt-1 font-medium">লোনের পরিমাণ লিখলে 1% ও 10% এর হিসাব এখানে দেখাবে</p>
             </div>
 
             <div>
@@ -277,6 +277,7 @@
     document.getElementById("logoutBtn").addEventListener("click", handleLogout);
 
     const officerUid = localStorage.getItem("userUid");
+    if (!officerUid) { window.location.href = "index.html"; }
 
     const esc = (t) => String(t ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     const localDateStr = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -329,9 +330,9 @@
       const p = Number(document.getElementById("principal").value) || 0;
       const hint = document.getElementById("depositHint");
       if (p > 0) {
-        hint.innerText = `হিসাব: ১% = ${Math.round(p * 0.01).toLocaleString('bn-BD')} ৳ | ২% = ${Math.round(p * 0.02).toLocaleString('bn-BD')} ৳`;
+        hint.innerText = `হিসাব: 1% = ${Math.round(p * 0.01).toLocaleString('en-US')} ৳ | 10% = ${Math.round(p * 0.10).toLocaleString('en-US')} ৳`;
       } else {
-        hint.innerText = "লোনের পরিমাণ লিখলে ১% ও ২% এর হিসাব এখানে দেখাবে";
+        hint.innerText = "লোনের পরিমাণ লিখলে 1% ও 10% এর হিসাব এখানে দেখাবে";
       }
     }
     document.getElementById("principal").addEventListener("input", updateDepositHint);
@@ -491,7 +492,7 @@
         return true;
       });
 
-      countEl.innerText = `পাওয়া গেছে: ${filtered.length.toLocaleString('bn-BD')} জন`;
+      countEl.innerText = `পাওয়া গেছে: ${filtered.length.toLocaleString('en-US')} জন`;
       container.innerHTML = "";
 
       if (filtered.length === 0) {
@@ -552,7 +553,7 @@
           <div class="grid grid-cols-2 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 text-xs gap-2">
             <div>
               <span class="text-slate-400 block text-[10px] font-medium">লোনের পরিমাণ</span>
-              <span class="font-bold text-slate-800 text-sm leading-tight">${Number(loan.principal || 0).toLocaleString('bn-BD')} ৳</span>
+              <span class="font-bold text-slate-800 text-sm leading-tight">${Number(loan.principal || 0).toLocaleString('en-US')} ৳</span>
             </div>
             <div class="text-right">
               <span class="text-slate-400 block text-[10px] font-medium">কিস্তি ও মেয়াদ</span>
@@ -609,17 +610,21 @@
       });
 
       // হোম স্ক্রিনের কাউন্টার আপডেট
-      document.getElementById("statTotal").innerText = countTotal.toLocaleString('bn-BD');
-      document.getElementById("statApproved").innerText = countApproved.toLocaleString('bn-BD');
-      document.getElementById("statPending").innerText = countPending.toLocaleString('bn-BD');
+      document.getElementById("statTotal").innerText = countTotal.toLocaleString('en-US');
+      document.getElementById("statApproved").innerText = countApproved.toLocaleString('en-US');
+      document.getElementById("statPending").innerText = countPending.toLocaleString('en-US');
 
       // কার্ড লিস্ট পুনরায় ড্র করা
       renderLoanCards();
+    }, (err) => {
+      console.error("loans", err);
+      document.getElementById("applicationCards") && (document.getElementById("applicationCards").innerHTML =
+        '<p class="text-center text-rose-600 text-sm py-6">ডাটা আনতে সমস্যা: ' + esc(err.message) + '</p>');
     });
 
     // ================= আজকের আদায় (ড্যাশবোর্ড কার্ড) =================
     (function () {
-      const bnNum = (n) => Number(n || 0).toLocaleString('bn-BD');
+      const bnNum = (n) => Number(n || 0).toLocaleString('en-US');
       let total = 0, inst = 0, sav = 0, count = 0;
       let handover = null;
 
@@ -642,7 +647,7 @@
         }
       }
 
-      const colQ = query(collection(db, "collections"), where("collectedByUid", "==", officerUid));
+      const colQ = query(collection(db, "collections"), where("collectedByUid", "==", officerUid), where("dateKey", "==", localDateStr()));
       onSnapshot(colQ, (snap) => {
         const now = new Date();
         const startDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -661,7 +666,7 @@
         });
         total = Math.round((inst + sav) * 100) / 100;
         paint();
-      });
+      }, (err) => console.error("collections", err));
 
       onSnapshot(doc(db, "handovers", localDateStr() + "_" + officerUid), (snap) => {
         handover = snap.exists() ? snap.data() : null;

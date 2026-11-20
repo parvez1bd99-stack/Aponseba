@@ -138,10 +138,11 @@
             window.location.href = "officer.html";
           }
         } else {
-          // যদি users কালেকশনে এন্ট্রি না থাকে তবে ডিফল্ট ওনার ধরা হবে
-          localStorage.setItem('userUid', uid);
-          localStorage.setItem('userRole', 'owner');
-          window.location.href = "admin.html";
+          // users কালেকশনে এন্ট্রি না থাকলে প্রবেশ বন্ধ
+          await auth.signOut();
+          localStorage.clear();
+          errorMsg.innerText = "এই অ্যাকাউন্টের অনুমতি নেই। মালিকের সাথে যোগাযোগ করুন।";
+          errorMsg.classList.remove("hidden");
         }
       } catch (err) {
         console.error(err);
