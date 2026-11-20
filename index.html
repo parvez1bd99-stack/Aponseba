@@ -62,7 +62,7 @@
 
       <div id="errorMsg" class="hidden text-sm text-rose-600 font-medium bg-rose-50 p-3 rounded-xl border border-rose-200"></div>
 
-      <button type="submit" id="loginBtn"
+      <button type="button" id="loginBtn"
               class="w-full bg-emerald-600 active:bg-emerald-800 hover:bg-emerald-700 text-white font-semibold text-base py-3.5 rounded-xl shadow-md transition duration-200 disabled:opacity-60">
         লগইন করুন
       </button>
@@ -94,8 +94,22 @@
     const errorMsg = document.getElementById("errorMsg");
     const loginBtn = document.getElementById("loginBtn");
 
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
+    // সেভ করা ডাটা সিলেক্ট করলে বা কীবোর্ডের Enter চাপলে অটো লগইন বন্ধ:
+    // শুধু লগইন বাটনে আসল ট্যাপ/ক্লিক করলেই লগইন হবে
+    loginForm.addEventListener("submit", (e) => e.preventDefault());
+
+    let realTap = false;
+    ["pointerdown", "touchstart", "mousedown"].forEach((ev) =>
+      loginBtn.addEventListener(ev, () => { realTap = true; }, { passive: true })
+    );
+    loginBtn.addEventListener("keydown", (e) => {
+      if (e.isTrusted && (e.key === "Enter" || e.key === " ")) realTap = true;
+    });
+
+    loginBtn.addEventListener("click", async (e) => {
+      if (!e.isTrusted || !realTap) return; // কোড/ব্রাউজার থেকে আসা অটো ক্লিক উপেক্ষা
+      realTap = false;
+      if (!loginForm.reportValidity()) return;
       errorMsg.classList.add("hidden");
       loginBtn.disabled = true;
       loginBtn.innerText = "যাচাই করা হচ্ছে...";
